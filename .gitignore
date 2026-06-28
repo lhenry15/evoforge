@@ -1,0 +1,11 @@
+.foundry/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+*.safetensors
+/tmp/
+.DS_Store

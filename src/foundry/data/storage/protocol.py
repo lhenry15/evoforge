@@ -1,0 +1,16 @@
+"""Storage backend protocol for DataRegistry."""
+
+from __future__ import annotations
+
+from typing import Any, Protocol, runtime_checkable
+
+
+@runtime_checkable
+class StorageBackend(Protocol):
+    """Pluggable storage for DataRegistry. Default: LocalStorageBackend."""
+
+    def read(self, path: str) -> Any: ...
+    def write(self, path: str, data: Any) -> None: ...
+    def exists(self, path: str) -> bool: ...
+    def list(self, prefix: str) -> list[str]: ...
+    def delete(self, path: str) -> None: ...
