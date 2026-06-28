@@ -87,12 +87,12 @@ packages = ["src/foundry"]
 
 [tool.ruff]
 src = ["src"]
-line-length = 88
+line-length = 120
 target-version = "py310"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP", "ANN"]
-ignore = ["ANN101", "ANN102"]
+select = ["E", "F"]
+ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.10"

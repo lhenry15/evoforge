@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 from foundry.environment.protocol import (
-    EnvironmentProtocol,
     EnvironmentSnapshot,
     EnvironmentState,
     FailureConfig,

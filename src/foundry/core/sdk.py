@@ -102,7 +102,7 @@ class FoundrySDK:
 
                 # Record trajectory to storage (best-effort, never raises)
                 try:
-                    from foundry.core.types import Message, Trajectory
+                    from foundry.core.types import Trajectory
                     messages = args[0] if args else kwargs.get("messages", [])
                     traj = Trajectory(
                         id=str(uuid.uuid4())[:8],

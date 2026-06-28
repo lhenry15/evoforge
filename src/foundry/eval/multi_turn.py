@@ -7,7 +7,7 @@ from typing import Any, Callable, Optional
 
 from pydantic import BaseModel, Field
 
-from foundry.core.types import EvalCase, EvalCaseResult, EvalRunResult, Message
+from foundry.core.types import EvalCaseResult, EvalRunResult, Message
 
 
 class Milestone(BaseModel):

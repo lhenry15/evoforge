@@ -7,7 +7,7 @@ from typing import Any, Callable, Optional
 
 from pydantic import BaseModel, Field
 
-from foundry.core.types import EvalCase, EvalRunResult, Message
+from foundry.core.types import EvalCase, Message
 
 
 class AgentArchitecture(BaseModel):

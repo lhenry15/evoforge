@@ -6,7 +6,7 @@ from typing import Any, Callable, Optional
 
 from pydantic import BaseModel, Field
 
-from foundry.core.types import EvalCase, EvalRunResult, PromotionEvent
+from foundry.core.types import EvalCase, PromotionEvent
 
 
 class ABTestConfig(BaseModel):

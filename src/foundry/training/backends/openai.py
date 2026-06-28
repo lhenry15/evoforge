@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 from pydantic import BaseModel
-from foundry.training.backends.protocol import FineTuneBackend, TrainingJob
+from foundry.training.backends.protocol import TrainingJob
 
 
 class OpenAIFineTuneConfig(BaseModel):

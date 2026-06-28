@@ -206,6 +206,16 @@ class TestPydanticAIWrapper:
 
 # ── LangChain wrapper tests ───────────────────────────────────────────────────
 
+import pytest
+
+langchain_available = True
+try:
+    from langchain_core.tools import tool as lc_tool
+except ImportError:
+    langchain_available = False
+
+
+@pytest.mark.skipif(not langchain_available, reason="langchain_core not installed")
 class TestLangChainWrapper:
 
     def test_decorator_attaches_metadata(self):

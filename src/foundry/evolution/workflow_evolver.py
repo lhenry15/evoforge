@@ -9,7 +9,7 @@ from typing import Any, Callable, Optional
 
 from pydantic import BaseModel, Field
 
-from foundry.core.types import CapabilityGap, EvalCaseResult, EvalRunResult
+from foundry.core.types import CapabilityGap, EvalRunResult
 
 
 class WorkflowStep(BaseModel):

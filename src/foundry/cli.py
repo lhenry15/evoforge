@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 import importlib.util
-import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
 console = Console()
 
@@ -74,7 +71,6 @@ def bootstrap(agent_file: str, cases: int, min_per_cap: int):
     console.print()
 
     with console.status("[bold green]Inferring capabilities & generating eval cases..."):
-        from foundry.bootstrap.pipeline import BootstrapConfig
         result = sdk.bootstrap(
             agent=agent_fn,
             num_eval_cases=cases,
@@ -97,7 +93,7 @@ def bootstrap(agent_file: str, cases: int, min_per_cap: int):
         table.add_row(cap, str(len(cap_cases)), diff_str)
 
     console.print(table)
-    console.print(f"\n  [green]✓[/] Saved to .foundry/eval_cases/bootstrap.json")
+    console.print("\n  [green]✓[/] Saved to .foundry/eval_cases/bootstrap.json")
     console.print(f"  Next: [bold]foundry eval {agent_file}[/]")
 
 
@@ -172,7 +168,7 @@ def evolve(agent_file: str, tag: str, train: bool, iters: int):
     # Load and run eval first
     cases = sdk.data.load_eval_cases(tag=tag)
     if not cases:
-        console.print(f"[red]No eval cases. Run bootstrap first.[/]")
+        console.print("[red]No eval cases. Run bootstrap first.[/]")
         sys.exit(1)
 
     with console.status("[bold green]Running eval..."):
@@ -391,7 +387,7 @@ def run(agent_file: str, cases: int, cycles: int, train: bool, iters: int):
     console.print(f"  Score trend: {' → '.join(f'{s:.3f}' for s in trend)}")
     console.print(f"  Start: {trend[0]:.3f} → End: {trend[-1]:.3f} (Δ {trend[-1]-trend[0]:+.3f})")
     console.print(f"  Versions: {history.n_versions} | Events: {len(history.events)}")
-    console.print(f"  Dashboard: [bold]foundry report[/]")
+    console.print("  Dashboard: [bold]foundry report[/]")
 
 
 @cli.command()

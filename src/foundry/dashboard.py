@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
 
 
 class DashboardGenerator:
@@ -251,9 +249,12 @@ class DashboardGenerator:
         return f'<div class="step-detail"><pre>{json.dumps(detail, indent=2)[:500]}</pre></div>'
 
     def _score_color(self, s: float) -> str:
-        if s >= 0.85: return "#4ade80"
-        if s >= 0.6: return "#60a5fa"
-        if s >= 0.3: return "#fbbf24"
+        if s >= 0.85:
+            return "#4ade80"
+        if s >= 0.6:
+            return "#60a5fa"
+        if s >= 0.3:
+            return "#fbbf24"
         return "#f87171"
 
     def _empty_page(self) -> str:

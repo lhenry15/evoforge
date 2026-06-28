@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from foundry.core.types import EvalCase, PromotionEvent
 from foundry.evolution.regression_guard import ABTestConfig, ABTestResult, RegressionGuard
-from foundry.training.backends.protocol import FineTuneBackend, TrainingJob
+from foundry.training.backends.protocol import TrainingJob
 
 
 class PromotionConfig(BaseModel):

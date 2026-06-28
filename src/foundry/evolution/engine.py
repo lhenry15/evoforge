@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pydantic import BaseModel
-from foundry.core.types import PromotionEvent, CapabilityGap, SaturationSignal
 
 
 class EvolutionTriggers(BaseModel):

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pydantic import BaseModel
-from foundry.training.backends.protocol import FineTuneBackend
 
 
 class CurriculumConfig(BaseModel):
