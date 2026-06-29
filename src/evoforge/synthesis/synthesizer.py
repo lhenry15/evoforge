@@ -41,6 +41,7 @@ class DataSynthesizer:
         near_dup_threshold: float = 0.85,
         min_novelty: float = 0.2,
         min_consistency: float = 0.5,
+        judge_votes: int = 3,
     ) -> None:
         self._generator = generator or ModeConditionedGenerator(pool=pool)
         self._judge_pool = judge_pool
@@ -49,6 +50,7 @@ class DataSynthesizer:
         self._near_dup_threshold = near_dup_threshold
         self._min_novelty = min_novelty
         self._min_consistency = min_consistency
+        self._judge_votes = judge_votes
 
     def synthesize(
         self,
@@ -65,11 +67,12 @@ class DataSynthesizer:
             near_dup_threshold=self._near_dup_threshold,
             min_novelty=self._min_novelty,
             min_consistency=self._min_consistency,
+            judge_votes=self._judge_votes,
         )
 
         accepted: list[SyntheticExample] = []
         rejected: list[SyntheticExample] = []
-        per_mode: Counter = Counter()
+        per_mode: Counter[str] = Counter()
 
         for cluster in mining_result.clusters[: self._max_clusters]:
             fmt = (formats or {}).get(cluster.mode) or default_format_for(cluster.mode)

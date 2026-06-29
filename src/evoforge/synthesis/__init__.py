@@ -12,6 +12,15 @@ Public surface::
         DataSynthesizer, ModeConditionedGenerator, QualityGate,
         SyntheticExample, SynthesisResult, QualityReport, SynthFormat,
     )
+
+Scenario-driven synthesis (the seed backbone) adds three composable components:
+
+    from evoforge.synthesis import (
+        Seed, SeedGenerator, SimParticipant,           # (1) control surface
+        ConversationGenerator, SimTranscript, SimTurn,  # (2) conversation
+        Label, LabelSchema, LabelField, SchemaLabeler,  # (3) open labeler set
+        REGISTRY, certify_labeler, label_transcript,
+    )
 """
 
 from evoforge.synthesis.schema import (
@@ -22,6 +31,28 @@ from evoforge.synthesis.schema import (
     SynthFormat,
     default_format_for,
 )
+from evoforge.synthesis.seed import Seed, SeedGenerator, SimParticipant
+from evoforge.synthesis.conversation import (
+    ConversationGenerator,
+    SimTranscript,
+    SimTurn,
+)
+from evoforge.synthesis.labeler import (
+    REGISTRY,
+    AVOIDS_FAILURE_SCHEMA,
+    CertProbe,
+    CertReport,
+    Label,
+    Labeler,
+    LabelerRegistry,
+    LabelField,
+    LabelSchema,
+    PRESENCE_SCHEMA,
+    SchemaLabeler,
+    certify_labeler,
+    label_transcript,
+)
+from evoforge.synthesis.pipeline import LabeledDataset, ScenarioSynthesizer
 from evoforge.synthesis.generator import ModeConditionedGenerator
 from evoforge.synthesis.quality import QualityGate
 from evoforge.synthesis.synthesizer import DataSynthesizer
@@ -36,4 +67,26 @@ __all__ = [
     "ModeConditionedGenerator",
     "QualityGate",
     "DataSynthesizer",
+    # scenario-driven synthesis (the seed backbone)
+    "Seed",
+    "SeedGenerator",
+    "SimParticipant",
+    "ConversationGenerator",
+    "SimTranscript",
+    "SimTurn",
+    "ScenarioSynthesizer",
+    "LabeledDataset",
+    "Label",
+    "Labeler",
+    "LabelField",
+    "LabelSchema",
+    "LabelerRegistry",
+    "SchemaLabeler",
+    "REGISTRY",
+    "PRESENCE_SCHEMA",
+    "AVOIDS_FAILURE_SCHEMA",
+    "CertProbe",
+    "CertReport",
+    "certify_labeler",
+    "label_transcript",
 ]

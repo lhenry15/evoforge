@@ -30,6 +30,14 @@ from evoforge.environment.protocol import EnvironmentProtocol
 from evoforge.environment.connectors.http import HTTPSandboxConnector
 from evoforge.environment.connectors.mcp import MCPConnector
 from evoforge.eval.runner import EvalType
+from evoforge.eval.simulator import (
+    ConversationSimulator,
+    ScriptedSimulator,
+    SimParticipant,
+    SimScenario,
+    SimTranscript,
+    SimTurn,
+)
 from evoforge.evolution.engine import EvolutionTriggers
 from evoforge.training.backends.protocol import FineTuneBackend
 from evoforge.training.backends.lora import LoRABackend
@@ -126,6 +134,12 @@ __all__ = [
     "HTTPSandboxConnector",
     "MCPConnector",
     "EvalType",
+    "ConversationSimulator",
+    "ScriptedSimulator",
+    "SimParticipant",
+    "SimScenario",
+    "SimTranscript",
+    "SimTurn",
     "EvolutionTriggers",
     "FineTuneBackend",
     "LoRABackend",

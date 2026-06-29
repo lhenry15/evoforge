@@ -31,12 +31,14 @@ class QualityGate:
         near_dup_threshold: float = 0.85,
         min_novelty: float = 0.2,
         min_consistency: float = 0.5,
+        judge_votes: int = 3,
     ) -> None:
         self._novelty = CorpusNovelty(corpus_instructions)
         self._judge_pool = judge_pool
         self._near_dup_threshold = near_dup_threshold
         self._min_novelty = min_novelty
         self._min_consistency = min_consistency
+        self._judge_votes = max(1, int(judge_votes))
 
     def evaluate(
         self,
@@ -86,18 +88,36 @@ class QualityGate:
             f"FAILURE MODE: {example.target_mode.value}\n"
             f'USER REQUEST: "{example.instruction[:160]}"\n'
             f'CANDIDATE RESPONSE: "{response[:200]}"\n'
-            "Does the response correctly handle the request and avoid the failure mode?"
+            "Does the response correctly handle the request and avoid the failure mode? "
+            "End your reply with a single number from 0.0 to 1.0 on its own."
         )
-        raw = self._judge_pool.generate(prompt, system=_JUDGE_SYSTEM, temperature=0, max_tokens=10)
-        if inspect.isawaitable(raw):
-            raise RuntimeError(
-                "QualityGate received an async judge pool in sync mode. "
-                "Use a synchronous pool (for example, OllamaLLMPool)."
-            )
-        match = re.search(r"[0-9]*\.?[0-9]+", str(raw))
-        if not match:
+        # A small judge ensemble (median) beats single-shot nondeterminism — some
+        # judge endpoints emit no/garbled content under a tiny token budget, so we
+        # give room and read the LAST number (reasoning models conclude at the end).
+        scores: list[float] = []
+        for _ in range(self._judge_votes):
+            raw = self._judge_pool.generate(prompt, system=_JUDGE_SYSTEM, temperature=0, max_tokens=64)
+            if inspect.isawaitable(raw):
+                raise RuntimeError(
+                    "QualityGate received an async judge pool in sync mode. "
+                    "Use a synchronous pool (for example, OllamaLLMPool)."
+                )
+            score = self._parse_score(str(raw))
+            if score is not None:
+                scores.append(score)
+        if not scores:
             return 0.5
+        scores.sort()
+        median = scores[len(scores) // 2]
+        return median
+
+    @staticmethod
+    def _parse_score(raw: str) -> Optional[float]:
+        """Read the LAST 0..1 number in the judge output (verdict comes last)."""
+        matches = re.findall(r"[0-9]*\.?[0-9]+", raw)
+        if not matches:
+            return None
         try:
-            return min(1.0, max(0.0, float(match.group())))
+            return min(1.0, max(0.0, float(matches[-1])))
         except ValueError:
-            return 0.5
+            return None

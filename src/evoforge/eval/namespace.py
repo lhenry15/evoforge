@@ -65,6 +65,54 @@ class EvalNamespace:
         sim = UserSimulator()
         return sim.run_scenarios(agent=agent, scenarios=scenarios)
 
+    def run_simulated(
+        self,
+        scenarios: list[Any],
+        simulator: Any,
+        agent: Callable | None = None,
+        agent_name: str | None = None,
+    ) -> EvalRunResult:
+        """Run a pluggable conversation simulator and score the labeled transcripts.
+
+        This activates the multi-party path: any object implementing
+        :class:`~evoforge.eval.simulator.ConversationSimulator` (e.g. the built-in
+        ``ScriptedSimulator`` or a pluggable connector) produces
+        a labeled transcript per scenario; each transcript is converted to an
+        :class:`~evoforge.core.types.EvalCase` and scored via the case's
+        ``scoring_method``. The conversation is already simulated (the agent is one
+        of the simulated parties), so no external agent call is made here.
+
+        Args:
+            scenarios: list of :class:`~evoforge.eval.simulator.SimScenario`.
+            simulator: a :class:`~evoforge.eval.simulator.ConversationSimulator`.
+            agent: optional agent passed through to interactive simulators.
+            agent_name: label for the aggregate result (defaults to the simulator name).
+
+        Returns:
+            An :class:`~evoforge.core.types.EvalRunResult` over the transcripts.
+        """
+        from evoforge.eval.simulator import simulate_many
+
+        transcripts = simulate_many(simulator, scenarios, agent)
+        results: list[EvalCaseResult] = []
+        for transcript in transcripts:
+            case = transcript.to_eval_case()
+            response = transcript.agent_response()
+            score, reasoning = self._score(case, response)
+            results.append(
+                EvalCaseResult(
+                    case_id=case.id,
+                    capability=case.capability,
+                    agent_response=response,
+                    score=score,
+                    passed=score >= 0.6,
+                    judge_reasoning=reasoning,
+                    metadata={"simulated": True, "labels": transcript.labels},
+                )
+            )
+        name = agent_name or getattr(simulator, "name", "simulator")
+        return self._aggregate(name, results)
+
     def run_full(
         self,
         agent: Callable,
