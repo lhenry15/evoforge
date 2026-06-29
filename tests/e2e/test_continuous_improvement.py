@@ -30,7 +30,6 @@ from foundry.core.types import (
 from foundry.llm.ollama import OllamaLLMPool
 from foundry.training.backends.mlx_lora import MLXLoRABackend, MLXLoRAConfig
 from foundry.factory.data_factory import DataFactory, DataFactoryConfig, TrainingExample
-from foundry.eval.expander import EvalExpander
 
 # ── Config ────────────────────────────────────────────────────────────────────
 

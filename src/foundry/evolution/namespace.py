@@ -74,21 +74,6 @@ class EvolveNamespace:
         self._sdk = sdk
         self._triggers = EvolutionTriggers()
 
-    def _select_strategy(self, llm_pool: Any) -> Any:
-        """
-        Auto-select the best data generation strategy.
-        Uses local rejection sampling (proven to work with local judge).
-        """
-        from foundry.factory.strategies import RejectionSampling
-
-        return RejectionSampling(
-            generator_pool=llm_pool,
-            judge_pool=llm_pool,
-            n_candidates=5,
-            keep_threshold=0.5,
-            temperature=0.9,
-        )
-
     def run_cycle(
         self,
         agent: Callable,
@@ -174,9 +159,10 @@ class EvolveNamespace:
 
         Steps:
           1. Analyse eval_result → EvolutionDecision
-          2. If GENERATE_TRAIN_DATA: use DataFactory to generate examples
+          2. If GENERATE_TRAIN_DATA: mine failure modes → synthesize targeted data
           3. If training_backend provided: launch fine-tune job
           4. If job succeeds: validate with a test prompt
+          5. Expand eval coverage toward observed failure modes (blind spots)
 
         Args:
             agent:             Decorated agent function.
@@ -255,33 +241,34 @@ class EvolveNamespace:
             except Exception as e:
                 result.errors.append(f"Prompt evolution failed: {e}")
 
-        # Step 2b: Generate training data for capability gaps
+        # Step 2b: Generate training data for capability gaps (mode-conditioned synthesis)
         if EvolutionAction.GENERATE_TRAIN_DATA in decision.actions and decision.capability_gaps:
             try:
-                # Auto-select the best data generation strategy
-                strategy = self._select_strategy(llm_pool)
-                examples = strategy.generate(
-                    gaps=decision.capability_gaps,
+                from foundry.synthesis.synthesizer import DataSynthesizer
+
+                # Mine real failure modes (re-classify + persist), then synthesize
+                # targeted training data conditioned on those modes.
+                mining = self._sdk.mine.run(agent.__name__, pool=llm_pool, persist=True)
+                corpus = [
+                    c.messages[-1].content
+                    for c in self._sdk.data.load_eval_cases(tag="bootstrap")
+                    if c.messages
+                ]
+                synthesizer = DataSynthesizer(
+                    pool=llm_pool, per_cluster=examples_per_gap, max_clusters=5
+                )
+                synth_result = synthesizer.synthesize(
+                    mining_result=mining,
                     task_spec=self._sdk.config.task_spec,
                     tools=tools,
                     system_prompt=system_prompt,
-                    n_per_gap=examples_per_gap,
+                    corpus_instructions=corpus,
                 )
+                examples = synth_result.training_examples()
                 result.training_examples_generated = len(examples)
 
                 if not examples:
-                    # Strategy produced 0 — fallback to basic DataFactory
-                    from foundry.factory.data_factory import DataFactory, DataFactoryConfig
-                    factory = DataFactory(pool=llm_pool, config=DataFactoryConfig(examples_per_gap=examples_per_gap))
-                    examples = factory.generate_for_gaps(
-                        gaps=decision.capability_gaps,
-                        task_spec=self._sdk.config.task_spec,
-                        tools=tools, system_prompt=system_prompt,
-                    )
-                    result.training_examples_generated = len(examples)
-
-                if not examples:
-                    result.errors.append("All data generation strategies produced 0 examples")
+                    result.errors.append("Synthesis produced 0 training examples")
                     return result
 
                 # Step 3: Launch training if backend provided
@@ -312,32 +299,17 @@ class EvolveNamespace:
             except Exception as e:
                 result.errors.append(f"Data generation failed: {e}")
 
-        # Step 5: Expand eval for saturating capabilities
-        if EvolutionAction.EXPAND_EVAL in decision.actions and decision.saturation_signals:
+        # Step 5: Expand eval coverage toward real failure modes (blind spots)
+        if decision.capability_gaps:
             try:
-                from foundry.eval.expander import EvalExpander
-
-                expander = EvalExpander(pool=llm_pool)
-                existing_cases = (
-                    self._sdk.data.load_eval_cases(tag="bootstrap")
-                    if hasattr(self._sdk, "_data") and self._sdk._data is not None
-                    else []
-                )
-
-                new_cases = expander.expand(
-                    saturation_signals=decision.saturation_signals,
-                    existing_cases=existing_cases,
-                    task_spec=self._sdk.config.task_spec,
+                new_cases = self._sdk.coverage.expand(
+                    agent.__name__,
+                    pool=llm_pool,
                     tools=tools,
-                    system_prompt=system_prompt,
+                    system_prompt=system_prompt or "",
+                    persist=True,
                 )
                 result.expanded_eval_cases = new_cases
-
-                # Save expanded cases
-                if new_cases:
-                    all_cases = existing_cases + new_cases
-                    self._sdk.data.save_eval_cases(all_cases, tag="bootstrap")
-
             except Exception as e:
                 result.errors.append(f"Eval expansion failed: {e}")
 

@@ -18,7 +18,7 @@ class OpenAIFineTuneBackend:
     """
     Fine-tune backend using the OpenAI fine-tune API. No GPU required.
 
-    Requires: pip install agent-foundry[openai]
+    Requires: pip install evoforge[openai]
 
     Example::
 

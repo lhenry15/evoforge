@@ -24,7 +24,7 @@ class LoRABackend:
     """
     Fine-tune backend using LoRA via HuggingFace PEFT + TRL.
 
-    Requires: pip install agent-foundry[lora]
+    Requires: pip install evoforge[lora]
 
     Example::
 

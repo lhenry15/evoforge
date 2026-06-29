@@ -17,9 +17,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from openai import OpenAI
 
-import foundry
-from foundry.core.agent_config import AgentConfig, ModelConfig, ModelHost
-from foundry.core.types import Message
+import evoforge as foundry
+from evoforge import AgentConfig, ModelConfig, ModelHost, Message
 
 # ── SDK setup ─────────────────────────────────────────────────────────────────
 

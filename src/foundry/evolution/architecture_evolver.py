@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
+import inspect
 from typing import Any, Callable, Optional
 
 from pydantic import BaseModel, Field
@@ -205,9 +205,15 @@ class ArchitectureEvolver:
                 f'B: "{r2[:150]}"\n'
                 f'Reply with just the better response (copy it exactly):'
             )
-            chosen = asyncio.run(pool.generate(judge_prompt, temperature=0, max_tokens=300))
+            chosen = pool.generate(judge_prompt, temperature=0, max_tokens=300)
+            if inspect.isawaitable(chosen):
+                raise RuntimeError(
+                    "ArchitectureEvolver received an async LLM pool in sync mode. "
+                    "Use a synchronous pool (for example, OllamaLLMPool)."
+                )
+            chosen_text = str(chosen)
             # Return whichever is more similar to chosen
-            return r1 if len(set(r1[:50]) & set(chosen[:50])) > len(set(r2[:50]) & set(chosen[:50])) else r2
+            return r1 if len(set(r1[:50]) & set(chosen_text[:50])) > len(set(r2[:50]) & set(chosen_text[:50])) else r2
 
         debate_agent.__name__ = f"{base_agent.__name__}_debate"
         for attr in ['_foundry_agent_config', '_foundry_tools', '_foundry_task_spec', '_foundry_sdk', '_foundry_multi_party']:
@@ -267,8 +273,14 @@ class ArchitectureEvolver:
                 f'Response: "{response[:200]}"\n'
                 f'If correct, reply with the same response. If errors found, fix them:'
             )
-            verified = asyncio.run(pool.generate(verify_prompt, temperature=0, max_tokens=300))
-            return verified if len(verified) > 10 else response
+            verified = pool.generate(verify_prompt, temperature=0, max_tokens=300)
+            if inspect.isawaitable(verified):
+                raise RuntimeError(
+                    "ArchitectureEvolver received an async LLM pool in sync mode. "
+                    "Use a synchronous pool (for example, OllamaLLMPool)."
+                )
+            verified_text = str(verified)
+            return verified_text if len(verified_text) > 10 else response
 
         verify_agent.__name__ = f"{base_agent.__name__}_verify"
         for attr in ['_foundry_agent_config', '_foundry_tools', '_foundry_task_spec', '_foundry_sdk', '_foundry_multi_party']:

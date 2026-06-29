@@ -19,6 +19,7 @@ from foundry.core.types import (
     DataFormat,
     Grade,
     TaskType,
+    Message,
     PromotionEvent,
     CapabilityGap,
     SaturationSignal,
@@ -38,6 +39,48 @@ from foundry.eval.scoring import ScoringConfig
 from foundry.factory.labeler import LabelStrategy
 from foundry.collection.telemetry import CollectConfig
 from foundry.core.privacy import PrivacyConfig, PrivacyRules
+from foundry.trace import (
+    FailureMode,
+    FailureSignature,
+    TraceLineage,
+    TraceNormalizer,
+    TraceOutcome,
+    TraceRecord,
+    TraceSource,
+    TraceStore,
+)
+from foundry.mining import (
+    FailureClusterer,
+    FailureModeCluster,
+    FailureModeMiner,
+    FailureModeReport,
+    MiningResult,
+)
+from foundry.synthesis import (
+    DataSynthesizer,
+    ModeConditionedGenerator,
+    QualityGate,
+    SynthesisResult,
+    SyntheticExample,
+    SynthFormat,
+)
+from foundry.coverage import (
+    AdaptiveEvalExpander,
+    Blindspot,
+    CoverageCell,
+    CoverageMap,
+    CoverageMapper,
+    CoverageReport,
+)
+from foundry.forecast import (
+    DriftMonitor,
+    DriftReport,
+    Forecast,
+    ForecastEvaluation,
+    ForecastRequest,
+    RiskForecaster,
+    RiskLevel,
+)
 
 
 def init(
@@ -77,6 +120,7 @@ __all__ = [
     "DataFormat",
     "Grade",
     "TaskType",
+    "Message",
     "ZeroShotSource",
     "EnvironmentProtocol",
     "HTTPSandboxConnector",
@@ -99,4 +143,36 @@ __all__ = [
     "PromotionEvent",
     "CapabilityGap",
     "SaturationSignal",
+    "FailureMode",
+    "FailureSignature",
+    "TraceLineage",
+    "TraceNormalizer",
+    "TraceOutcome",
+    "TraceRecord",
+    "TraceSource",
+    "TraceStore",
+    "FailureClusterer",
+    "FailureModeCluster",
+    "FailureModeMiner",
+    "FailureModeReport",
+    "MiningResult",
+    "DataSynthesizer",
+    "ModeConditionedGenerator",
+    "QualityGate",
+    "SynthesisResult",
+    "SyntheticExample",
+    "SynthFormat",
+    "AdaptiveEvalExpander",
+    "Blindspot",
+    "CoverageCell",
+    "CoverageMap",
+    "CoverageMapper",
+    "CoverageReport",
+    "DriftMonitor",
+    "DriftReport",
+    "Forecast",
+    "ForecastEvaluation",
+    "ForecastRequest",
+    "RiskForecaster",
+    "RiskLevel",
 ]

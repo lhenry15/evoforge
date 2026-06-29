@@ -42,4 +42,4 @@ We evaluate Foundry across tool-use, reasoning, and code generation benchmarks,
 demonstrating that the autonomous evolution loop yields consistent performance gains
 (average +18% over three evolution cycles) without any human labeling or manual
 benchmark curation. Foundry is open-sourced under Apache 2.0 at
-https://github.com/[org]/agent-foundry.
+https://github.com/lhenry15/evoforge.

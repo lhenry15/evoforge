@@ -1,4 +1,4 @@
-"""Foundry CLI — terminal interface for the data-centric agent evolution SDK."""
+"""EvoForge CLI — terminal interface for the data-centric agent evolution SDK."""
 
 from __future__ import annotations
 
@@ -12,6 +12,14 @@ from rich.panel import Panel
 from rich.table import Table
 
 console = Console()
+
+
+def _resolve_store_path() -> Path:
+    """Resolve storage path, preferring a project-local .foundry directory."""
+    project_store = Path.cwd() / ".foundry"
+    if project_store.exists():
+        return project_store
+    return Path.home() / "agent-foundry" / ".foundry"
 
 
 def _load_agent_from_file(agent_path: str):
@@ -49,7 +57,7 @@ def _load_agent_from_file(agent_path: str):
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="foundry")
+@click.version_option(version="0.1.0", prog_name="evoforge")
 def cli():
     """EvoForge — data-centric self-evolving agent SDK."""
     pass
@@ -61,7 +69,7 @@ def cli():
 @click.option("--min-per-cap", default=3, help="Minimum cases per capability")
 def bootstrap(agent_file: str, cases: int, min_per_cap: int):
     """Auto-generate eval cases from agent's task_spec + tools."""
-    console.print(Panel("[bold]Foundry Bootstrap[/]", style="blue"))
+    console.print(Panel("[bold]EvoForge Bootstrap[/]", style="blue"))
 
     agents, sdk = _load_agent_from_file(agent_file)
     agent_name, agent_fn = agents[0]
@@ -94,7 +102,7 @@ def bootstrap(agent_file: str, cases: int, min_per_cap: int):
 
     console.print(table)
     console.print("\n  [green]✓[/] Saved to .foundry/eval_cases/bootstrap.json")
-    console.print(f"  Next: [bold]foundry eval {agent_file}[/]")
+    console.print(f"  Next: [bold]evoforge eval {agent_file}[/]")
 
 
 @cli.command()
@@ -103,7 +111,7 @@ def bootstrap(agent_file: str, cases: int, min_per_cap: int):
 @click.option("--parallelism", "-p", default=1, help="Concurrent eval workers")
 def eval(agent_file: str, tag: str, parallelism: int):
     """Run eval cases against an agent and score results."""
-    console.print(Panel("[bold]Foundry Eval[/]", style="green"))
+    console.print(Panel("[bold]EvoForge Eval[/]", style="green"))
 
     agents, sdk = _load_agent_from_file(agent_file)
     agent_name, agent_fn = agents[0]
@@ -112,7 +120,7 @@ def eval(agent_file: str, tag: str, parallelism: int):
     cases = sdk.data.load_eval_cases(tag=tag)
     if not cases:
         console.print(f"[red]No eval cases found for tag '{tag}'.[/]")
-        console.print(f"Run [bold]foundry bootstrap {agent_file}[/] first.")
+        console.print(f"Run [bold]evoforge bootstrap {agent_file}[/] first.")
         sys.exit(1)
 
     console.print(f"  Agent: [cyan]{agent_name}[/]")
@@ -147,10 +155,14 @@ def eval(agent_file: str, tag: str, parallelism: int):
         icon = "[green]✓[/]" if r.passed else "[red]✗[/]"
         console.print(f"  {icon} [{r.case_id}] {r.capability}: {r.score:.2f}  [dim]{r.judge_reasoning or ''}[/]")
 
-    # Save result
+    # Save result + record normalized traces (feeds mining / coverage / forecasting)
     sdk.data.save_eval_result(result)
+    try:
+        sdk.trace.record_eval_run(result, cases=cases)
+    except Exception:
+        pass
     console.print(f"\n  [green]✓[/] Results saved to .foundry/eval_results/{agent_name}/")
-    console.print(f"  Next: [bold]foundry evolve {agent_file}[/]")
+    console.print(f"  Next: [bold]evoforge evolve {agent_file}[/]")
 
 
 @cli.command()
@@ -160,7 +172,7 @@ def eval(agent_file: str, tag: str, parallelism: int):
 @click.option("--iters", default=100, help="LoRA training iterations")
 def evolve(agent_file: str, tag: str, train: bool, iters: int):
     """Analyze eval results and evolve the agent."""
-    console.print(Panel("[bold]Foundry Evolve[/]", style="magenta"))
+    console.print(Panel("[bold]EvoForge Evolve[/]", style="magenta"))
 
     agents, sdk = _load_agent_from_file(agent_file)
     agent_name, agent_fn = agents[0]
@@ -220,7 +232,7 @@ def evolve(agent_file: str, tag: str, train: bool, iters: int):
             for s in decision.saturation_signals:
                 console.print(f"    ✓ {s.capability}: {s.score:.2f} → add {s.suggested_expansion} harder cases")
 
-    console.print(f"\n  To train: [bold]foundry evolve {agent_file} --train[/]")
+    console.print(f"\n  To train: [bold]evoforge evolve {agent_file} --train[/]")
 
 
 @cli.command()
@@ -231,7 +243,7 @@ def evolve(agent_file: str, tag: str, train: bool, iters: int):
 @click.option("--iters", default=100, help="LoRA training iterations")
 def run(agent_file: str, cases: int, cycles: int, train: bool, iters: int):
     """Full autonomous evolution loop: bootstrap → eval → evolve → repeat."""
-    console.print(Panel("[bold]Foundry Run — Autonomous Evolution[/]", style="blue bold"))
+    console.print(Panel("[bold]EvoForge Run — Autonomous Evolution[/]", style="blue bold"))
     console.print()
 
     agents, sdk = _load_agent_from_file(agent_file)
@@ -274,6 +286,12 @@ def run(agent_file: str, cases: int, cycles: int, train: bool, iters: int):
         with console.status(f"Evaluating ({len(eval_cases)} cases + {len(mt_scenarios)} scenarios)..."):
             eval_result = sdk.eval.run_full(agent=agent_fn, cases=eval_cases, scenarios=mt_scenarios, parallelism=1)
 
+        # Record normalized traces for mining / coverage / forecasting.
+        try:
+            sdk.trace.record_eval_run(eval_result, cases=eval_cases)
+        except Exception:
+            pass
+
         score = eval_result.overall_score
         delta = score - prev_score if cycle_num > 1 else 0
         score_color = "green" if score >= 0.6 else "yellow" if score >= 0.3 else "red"
@@ -297,7 +315,6 @@ def run(agent_file: str, cases: int, cycles: int, train: bool, iters: int):
         # 4. Decide
         decision = sdk.evolve.run_cycle(agent=agent_fn, eval_result=eval_result)
         gaps = decision.capability_gaps
-        saturations = decision.saturation_signals
 
         if EvolutionAction.NO_ACTION in decision.actions:
             console.print("  [green]✓ All capabilities passing — no action needed[/]")
@@ -356,22 +373,22 @@ def run(agent_file: str, cases: int, cycles: int, train: bool, iters: int):
                 if config:
                     config.skill_prompts = agent_skills.copy()
 
-        # 6. Expand eval if saturating
-        if saturations:
-            from foundry.eval.expander import EvalExpander
-            with console.status("Expanding eval..."):
-                expander = EvalExpander(pool=pool)
-                new_cases = expander.expand(
-                    saturation_signals=saturations,
-                    existing_cases=eval_cases,
-                    task_spec=sdk.config.task_spec,
-                    tools=getattr(agent_fn, '_foundry_tools', []),
-                )
-            if new_cases:
-                eval_cases = eval_cases + new_cases
-                console.print(f"  📈 Eval expanded: +{len(new_cases)} harder cases")
-                history.record_eval_expanded(n_old=len(eval_cases)-len(new_cases),
-                                            n_new=len(eval_cases), capabilities=[s.capability for s in saturations])
+        # 6. Expand eval coverage toward observed failure modes (blind spots)
+        with console.status("Expanding eval coverage on blind spots..."):
+            sys_prompt = getattr(getattr(agent_fn, '_foundry_agent_config', None), 'system_prompt', '') or ''
+            new_cases = sdk.coverage.expand(
+                agent_name,
+                pool=pool,
+                persist=True,
+                tools=getattr(agent_fn, '_foundry_tools', []),
+                system_prompt=sys_prompt,
+            )
+        if new_cases:
+            n_old = len(eval_cases)
+            eval_cases = eval_cases + new_cases
+            console.print(f"  📈 Eval expanded: +{len(new_cases)} targeted cases (blind spots)")
+            history.record_eval_expanded(n_old=n_old, n_new=len(eval_cases),
+                                        capabilities=sorted({c.capability for c in new_cases}))
 
         history.snapshot(
             system_prompt=agent_fn._foundry_agent_config.system_prompt if agent_fn._foundry_agent_config else '',
@@ -387,17 +404,17 @@ def run(agent_file: str, cases: int, cycles: int, train: bool, iters: int):
     console.print(f"  Score trend: {' → '.join(f'{s:.3f}' for s in trend)}")
     console.print(f"  Start: {trend[0]:.3f} → End: {trend[-1]:.3f} (Δ {trend[-1]-trend[0]:+.3f})")
     console.print(f"  Versions: {history.n_versions} | Events: {len(history.events)}")
-    console.print("  Dashboard: [bold]foundry report[/]")
+    console.print("  Dashboard: [bold]evoforge report[/]")
 
 
 @cli.command()
 def status():
-    """Show current Foundry data status."""
-    console.print(Panel("[bold]Foundry Status[/]", style="cyan"))
+    """Show current EvoForge data status."""
+    console.print(Panel("[bold]EvoForge Status[/]", style="cyan"))
 
-    store = Path.home() / "agent-foundry" / ".foundry"
+    store = _resolve_store_path()
     if not store.exists():
-        console.print("  [dim]No .foundry/ directory found. Run `foundry bootstrap` first.[/]")
+        console.print("  [dim]No .foundry/ directory found. Run `evoforge bootstrap` first.[/]")
         return
 
     # Eval cases
@@ -426,6 +443,96 @@ def status():
     if train_dir.exists():
         jobs = [d.name for d in train_dir.iterdir() if d.is_dir() and d.name != "staged"]
         console.print(f"  Training jobs: {len(jobs)}")
+
+
+@cli.command()
+@click.option(
+    "--output",
+    "-o",
+    default=None,
+    help="Output HTML file path (default: ~/agent-foundry/.foundry/report.html)",
+)
+def report(output: str | None):
+    """Generate the unified HTML report (evolution history + failure intelligence)."""
+    console.print(Panel("[bold]EvoForge Report[/]", style="cyan"))
+
+    store = _resolve_store_path()
+    if not store.exists():
+        console.print("  [dim]No .foundry/ directory found. Run `evoforge run` first.[/]")
+        return
+
+    from foundry.dashboard import DashboardGenerator
+
+    out_path = Path(output).expanduser() if output else (store / "report.html")
+    generator = DashboardGenerator(storage_path=str(store))
+    report_path = generator.generate(str(out_path))
+
+    console.print(f"  [green]✓[/] Report generated: [bold]{report_path}[/]")
+
+
+@cli.command()
+@click.argument("agent_file")
+@click.argument("message")
+@click.option("--capability", "-c", default=None, help="Capability hint for the request")
+def forecast(agent_file: str, message: str, capability: str | None):
+    """Forecast failure risk for a request before running the agent."""
+    console.print(Panel("[bold]EvoForge Forecast[/]", style="yellow"))
+
+    agents, sdk = _load_agent_from_file(agent_file)
+    agent_name, _ = agents[0]
+
+    traces = sdk.trace.load(agent_name)
+    if len(traces) < 4:
+        console.print(
+            f"  [yellow]Not enough recorded traces for '{agent_name}' "
+            f"({len(traces)} found, need ≥4).[/]"
+        )
+        console.print(f"  Run [bold]evoforge eval {agent_file}[/] first to record traces.")
+        return
+
+    with console.status("Fitting risk forecaster..."):
+        sdk.forecast.fit(agent_name)
+    result = sdk.forecast.predict(agent_name, message, capability=capability)
+
+    color = {"low": "green", "medium": "yellow", "high": "red"}[result.risk_level.value]
+    lo, hi = result.confidence_interval
+    console.print(f"  Request: [dim]{message[:70]}[/]")
+    console.print(
+        f"  Risk: [{color} bold]{result.risk_level.value.upper()}[/]  "
+        f"P(failure)={result.p_failure:.2f}  CI=[{lo:.2f}, {hi:.2f}]"
+    )
+    console.print(f"  Likely failure mode: [cyan]{result.likely_mode}[/]")
+    console.print(f"  Novelty: {result.novelty:.2f}")
+    console.print(f"  Rationale: {'; '.join(result.rationale)}")
+
+
+@cli.command()
+@click.argument("agent_file")
+@click.option("--output", "-o", default=None, help="Output HTML path (default: <store>/insights.html)")
+def insights(agent_file: str, output: str | None):
+    """Generate the failure-intelligence dashboard (mining + coverage + forecasting)."""
+    console.print(Panel("[bold]EvoForge Insights[/]", style="magenta"))
+
+    agents, sdk = _load_agent_from_file(agent_file)
+    agent_name, _ = agents[0]
+
+    traces = sdk.trace.load(agent_name)
+    if not traces:
+        console.print(
+            f"  [yellow]No recorded traces for '{agent_name}'.[/] "
+            f"Run [bold]evoforge eval {agent_file}[/] first."
+        )
+        return
+
+    from foundry.intelligence_dashboard import IntelligenceDashboard
+
+    store = _resolve_store_path()
+    out_path = Path(output).expanduser() if output else (store / "insights.html")
+    with console.status("Building intelligence dashboard..."):
+        path = IntelligenceDashboard().generate(sdk, agent_name, str(out_path))
+
+    console.print(f"  [green]✓[/] Insights dashboard: [bold]{path}[/]")
+    console.print("  Open it in your browser to explore failure modes, coverage, and forecasts.")
 
 
 def main():

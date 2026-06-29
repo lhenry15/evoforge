@@ -1,4 +1,4 @@
-"""ContextNamespace and EnvNamespace — stub namespaces for sdk.context / sdk.env."""
+"""ContextNamespace — sdk.context interface."""
 
 from __future__ import annotations
 
@@ -20,12 +20,3 @@ class ContextNamespace:
     def bootstrap_from_logs(self, log_source: Any) -> None:
         raise NotImplementedError("Chat log bootstrap is a V1.0 feature.")
 
-
-class EnvNamespace:
-    """sdk.env — sandbox environment management (V1.0)."""
-
-    def __init__(self, sdk: "FoundrySDK") -> None:
-        self._sdk = sdk
-
-    def connect(self, connector: Any) -> None:
-        raise NotImplementedError("Environment connectors are a V1.0 feature.")

@@ -19,6 +19,11 @@ class FoundrySDK:
         .eval             — EvalRunner namespace
         .evolve           — EvolutionEngine namespace
         .data             — DataRegistry namespace
+        .trace            — Trace intelligence namespace
+        .mine             — Failure-mode mining namespace
+        .synth            — Targeted synthetic data namespace
+        .coverage         — Adaptive eval coverage namespace
+        .forecast         — Failure forecasting namespace
         .context          — Context management namespace
         .env              — Environment management namespace
         .register()       — override default components
@@ -43,6 +48,11 @@ class FoundrySDK:
         self._data: Any = None
         self._context: Any = None
         self._env: Any = None
+        self._trace: Any = None
+        self._mine: Any = None
+        self._synth: Any = None
+        self._coverage: Any = None
+        self._forecast: Any = None
 
     # ── Decorators ────────────────────────────────────────────────────
 
@@ -279,6 +289,41 @@ class FoundrySDK:
             from foundry.environment.namespace import EnvNamespace
             self._env = EnvNamespace(self)
         return self._env
+
+    @property
+    def trace(self) -> Any:
+        if self._trace is None:
+            from foundry.trace.namespace import TraceNamespace
+            self._trace = TraceNamespace(self)
+        return self._trace
+
+    @property
+    def mine(self) -> Any:
+        if self._mine is None:
+            from foundry.mining.namespace import MiningNamespace
+            self._mine = MiningNamespace(self)
+        return self._mine
+
+    @property
+    def synth(self) -> Any:
+        if self._synth is None:
+            from foundry.synthesis.namespace import SynthesisNamespace
+            self._synth = SynthesisNamespace(self)
+        return self._synth
+
+    @property
+    def coverage(self) -> Any:
+        if self._coverage is None:
+            from foundry.coverage.namespace import CoverageNamespace
+            self._coverage = CoverageNamespace(self)
+        return self._coverage
+
+    @property
+    def forecast(self) -> Any:
+        if self._forecast is None:
+            from foundry.forecast.namespace import ForecastNamespace
+            self._forecast = ForecastNamespace(self)
+        return self._forecast
 
     def register(self, **components: Any) -> None:
         """Override default components: environment, label_strategy, evolver, etc."""

@@ -32,6 +32,8 @@ Most agent frameworks help you **build** agents. EvoForge helps you **improve** 
 pip install evoforge
 ```
 
+> Import with `import evoforge` (preferred). `import foundry` remains supported for compatibility.
+
 **1. Wrap your agent (any framework):**
 
 ```python
@@ -69,6 +71,7 @@ evoforge bootstrap my_agent.py    # Generate eval cases
 evoforge eval my_agent.py         # Score agent per capability
 evoforge evolve my_agent.py       # Identify gaps + evolve
 evoforge run my_agent.py          # Full autonomous loop
+evoforge report                   # Generate HTML evolution dashboard
 evoforge status                   # Show stored data
 ```
 
@@ -91,10 +94,10 @@ evoforge status                   # Show stored data
 │     3. Architecture (CoT, debate, decompose)                      │
 │     4. Model (LoRA fine-tuning)                                   │
 │                                                                   │
-│   Data strategies:                                                │
-│     • Teacher distillation (gpt-4o-mini generates examples)       │
-│     • Rejection sampling (generate N, keep top-K)                 │
-│     • Self-play (model debates itself)                            │
+│   Data generation:                                                │
+│     • Failure-mode mining (cluster real failures)                 │
+│     • Mode-conditioned synthesis (targeted train data)            │
+│     • Adaptive eval expansion (close coverage blind spots)        │
 │                                                                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -131,7 +134,7 @@ EvoForge runs entirely on your machine:
 - **Inference**: Ollama (qwen2.5:3b or any model)
 - **Training**: MLX LoRA on Apple Silicon
 - **Judge**: Local LLM (or gpt-4o-mini for higher accuracy)
-- **Storage**: `.evoforge/` directory in your project
+- **Storage**: `~/agent-foundry/.foundry/` by default
 
 Zero cloud dependency. Zero cost. Full privacy.
 
@@ -201,7 +204,7 @@ ollama pull qwen2.5:3b
 ## Project Structure
 
 ```
-src/evoforge/
+src/foundry/
 ├── core/           # SDK, config, types, agent history
 ├── eval/           # Eval runner, LLM judge, multi-turn, expander
 ├── evolution/      # Prompt evolver, skill registry, architecture search
@@ -218,7 +221,7 @@ src/evoforge/
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). PRs welcome — especially for:
-- New data generation strategies
+- New failure-mode synthesis strategies
 - Better LLM judge prompts
 - Additional training backends (QLoRA, OpenAI FT)
 - Multi-party eval

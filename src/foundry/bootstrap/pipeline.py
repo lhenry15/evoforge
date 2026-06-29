@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-import json
-import re
 import uuid
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
 from foundry.core.types import EvalCase, Message, ScoringMethod
+from foundry.llm.structured import coerce_records, extract_json
+from foundry.text import format_tools
 
 
 _CAPABILITY_SYSTEM = """You are an expert AI evaluation designer.
@@ -115,13 +115,9 @@ SYSTEM PROMPT: {system_prompt or '(not provided)'}
 What capabilities should we evaluate?"""
 
         raw = self._pool.generate(prompt, system=_CAPABILITY_SYSTEM, temperature=0.3)
-        try:
-            cleaned = self._extract_json_array(raw)
-            caps = json.loads(cleaned)
-            if isinstance(caps, list) and all(isinstance(c, dict) for c in caps):
-                return caps[:4]  # Cap at 4
-        except (json.JSONDecodeError, TypeError):
-            pass
+        caps = coerce_records(extract_json(raw))
+        if caps:
+            return caps[:4]  # Cap at 4
         return [{"name": str(t)[:20], "description": f"Tests {t}"} for t in tools[:3]]
 
     def _calibrate_agent(self, agent, capabilities, task_spec) -> dict[str, str]:
@@ -162,32 +158,23 @@ Generate {n} diverse test cases for "{cap_name}"."""
         return self._parse_cases(raw, cap_name)
 
     def _parse_cases(self, raw: str, capability: str) -> list[EvalCase]:
-        try:
-            cleaned = self._extract_json_array(raw)
-            items = json.loads(cleaned)
-            if not isinstance(items, list):
-                return []
-
-            cases = []
-            for item in items:
-                if not isinstance(item, dict):
-                    continue
-                user_msg = item.get("user_message", "")
-                if not user_msg:
-                    continue
-                method = ScoringMethod.LLM_JUDGE if self._config.scoring_preference == "llm_judge" else ScoringMethod.CONTAINS
-                cases.append(EvalCase(
-                    id=f"{capability[:8]}-{uuid.uuid4().hex[:4]}",
-                    capability=capability,
-                    messages=[Message(role="user", content=user_msg)],
-                    expected=item.get("expected", ""),
-                    scoring_method=method,
-                    scoring_rubric=item.get("scoring_rubric"),
-                    metadata={"difficulty": item.get("difficulty", "medium"), "bootstrapped": True},
-                ))
-            return cases
-        except (json.JSONDecodeError, TypeError):
-            return []
+        items = coerce_records(extract_json(raw))
+        cases = []
+        for item in items:
+            user_msg = item.get("user_message", "")
+            if not user_msg:
+                continue
+            method = ScoringMethod.LLM_JUDGE if self._config.scoring_preference == "llm_judge" else ScoringMethod.CONTAINS
+            cases.append(EvalCase(
+                id=f"{capability[:8]}-{uuid.uuid4().hex[:4]}",
+                capability=capability,
+                messages=[Message(role="user", content=user_msg)],
+                expected=item.get("expected", ""),
+                scoring_method=method,
+                scoring_rubric=item.get("scoring_rubric"),
+                metadata={"difficulty": item.get("difficulty", "medium"), "bootstrapped": True},
+            ))
+        return cases
 
     def _generate_multi_turn(self, task_spec, capabilities, tools) -> list[Any]:
         from foundry.eval.multi_turn import MultiTurnScenario, Milestone
@@ -202,51 +189,35 @@ Reply with JSON array:
   "milestones": [{{"description": "what should happen", "check": "keyword"}}]}}]"""
 
         raw = self._pool.generate(prompt, temperature=0.7, max_tokens=2048)
-        try:
-            cleaned = self._extract_json_array(raw)
-            items = json.loads(cleaned)
-            scenarios = []
-            for item in items:
-                if not isinstance(item, dict) or not item.get("initial_message"):
-                    continue
-                milestones = []
-                for m in item.get("milestones", []):
-                    if isinstance(m, dict) and m.get("check"):
-                        check = m["check"]
-                        if isinstance(check, list):
-                            check = check[0] if check else ""
-                        if check:
-                            milestones.append(Milestone(description=m.get("description", ""), check=str(check)))
-                if not milestones:
-                    continue
-                cap = item.get("capability", "multi_turn")
-                if isinstance(cap, list):
-                    cap = cap[0] if cap else "multi_turn"
-                scenarios.append(MultiTurnScenario(
-                    id=item.get("id", f"mt-{uuid.uuid4().hex[:4]}"),
-                    capability=str(cap).split(",")[0].strip(),
-                    initial_message=item["initial_message"],
-                    user_responses=item.get("user_responses", []),
-                    milestones=milestones,
-                ))
-            return scenarios
-        except (json.JSONDecodeError, TypeError):
-            return []
-
-    def _extract_json_array(self, raw: str) -> str:
-        cleaned = raw.strip()
-        if "```" in cleaned:
-            match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', cleaned, re.DOTALL)
-            if match:
-                return match.group(1)
-        if not cleaned.startswith("["):
-            match = re.search(r'\[.*\]', cleaned, re.DOTALL)
-            if match:
-                return match.group()
-        return cleaned
+        items = coerce_records(extract_json(raw))
+        scenarios = []
+        for item in items:
+            if not item.get("initial_message"):
+                continue
+            milestones = []
+            for m in item.get("milestones", []):
+                if isinstance(m, dict) and m.get("check"):
+                    check = m["check"]
+                    if isinstance(check, list):
+                        check = check[0] if check else ""
+                    if check:
+                        milestones.append(Milestone(description=m.get("description", ""), check=str(check)))
+            if not milestones:
+                continue
+            cap = item.get("capability", "multi_turn")
+            if isinstance(cap, list):
+                cap = cap[0] if cap else "multi_turn"
+            scenarios.append(MultiTurnScenario(
+                id=item.get("id", f"mt-{uuid.uuid4().hex[:4]}"),
+                capability=str(cap).split(",")[0].strip(),
+                initial_message=item["initial_message"],
+                user_responses=item.get("user_responses", []),
+                milestones=milestones,
+            ))
+        return scenarios
 
     def _format_tools(self, tools: list[Any]) -> str:
-        return "\n".join(f"- {t}" if isinstance(t, str) else f"- {getattr(t, 'name', t)}" for t in tools) or "None"
+        return format_tools(tools)
 
     @staticmethod
     def mine_scenarios_from_trajectories(trajectories: list[Any]) -> list[Any]:

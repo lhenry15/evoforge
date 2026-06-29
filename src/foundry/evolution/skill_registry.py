@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
+import inspect
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -219,8 +219,13 @@ Requirements:
 
 Reply with ONLY the refined skill content (no JSON wrapping, just the markdown)."""
 
-        raw = asyncio.run(self._pool.generate(prompt, temperature=0.3, max_tokens=1024))
-        refined_content = raw.strip()
+        raw = self._pool.generate(prompt, temperature=0.3, max_tokens=1024)
+        if inspect.isawaitable(raw):
+            raise RuntimeError(
+                "SkillRegistry received an async LLM pool in sync mode. "
+                "Use a synchronous pool (for example, OllamaLLMPool)."
+            )
+        refined_content = str(raw).strip()
 
         if refined_content and refined_content != skill.current_content:
             return self.refine(name, refined_content, reason=f"auto-refined after failures: {failures[:2]}")

@@ -117,8 +117,6 @@ class DPOGenerator:
 
         Groups trajectories by instruction, then uses LLM to rank responses.
         """
-        import asyncio
-
         # Group by instruction
         groups: dict[str, list[Trajectory]] = {}
         for traj in trajectories:
@@ -132,7 +130,7 @@ class DPOGenerator:
             if len(trajs) < 2:
                 continue
             # Use LLM to rank responses
-            scored = asyncio.run(self._llm_rank(trajs, pool, system_prompt))
+            scored = self._llm_rank(trajs, pool, system_prompt)
             scored.sort(key=lambda x: x[1], reverse=True)
 
             for i in range(len(scored) // 2):
@@ -149,21 +147,27 @@ class DPOGenerator:
 
         return pairs[:self._config.max_pairs]
 
-    async def _llm_rank(
+    def _llm_rank(
         self, trajs: list[Trajectory], pool: Any, system_prompt: str
     ) -> list[tuple[Trajectory, float]]:
-        """Score each trajectory response using LLM."""
+        """Score each trajectory response using LLM (synchronous)."""
+        import inspect
         import re
         results = []
         for traj in trajs[:10]:  # cap at 10 per group
             prompt = f"""Rate this agent response quality (0.0-1.0).
-Task: respond to user's flight-related request.
+Task: respond to user's request.
 User: "{traj.messages[-1].content[:100]}"
 Agent: "{traj.response[:200]}"
 Reply with ONLY a number between 0.0 and 1.0:"""
-            raw = await pool.generate(prompt, temperature=0, max_tokens=10)
+            raw = pool.generate(prompt, temperature=0, max_tokens=10)
+            if inspect.isawaitable(raw):
+                raise RuntimeError(
+                    "DPOGenerator received an async LLM pool in sync mode. "
+                    "Use a synchronous pool (for example, OllamaLLMPool)."
+                )
             try:
-                score = float(re.search(r'[0-9.]+', raw).group())
+                score = float(re.search(r'[0-9.]+', str(raw)).group())
                 score = min(1.0, max(0.0, score))
             except (AttributeError, ValueError):
                 score = 0.5

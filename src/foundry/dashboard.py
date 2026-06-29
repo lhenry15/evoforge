@@ -26,8 +26,7 @@ class DashboardGenerator:
         self._path = Path(storage_path)
 
     def generate(self, output_path: str) -> str:
-        histories = self._load_histories()
-        html = self._render(histories)
+        html = self._render()
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         Path(output_path).write_text(html)
         return str(Path(output_path).resolve())
@@ -48,24 +47,61 @@ class DashboardGenerator:
                     pass
         return histories
 
-    def _render(self, histories: dict[str, dict]) -> str:
-        if not histories:
+    def _trace_agents(self) -> list[str]:
+        """Agents that have recorded traces (may or may not have evolution history)."""
+        traces_dir = self._path / "traces"
+        if not traces_dir.exists():
+            return []
+        return sorted(d.name for d in traces_dir.iterdir() if d.is_dir())
+
+    def _agent_names(self) -> list[str]:
+        names: list[str] = list(self._load_histories().keys())
+        for name in self._trace_agents():
+            if name not in names:
+                names.append(name)
+        return names
+
+    def _render(self) -> str:
+        histories = self._load_histories()
+        agent_names = self._agent_names()
+        if not agent_names:
             return self._empty_page()
 
-        agents_html = ""
-        for agent_name, h in histories.items():
-            agents_html += self._render_agent(agent_name, h)
+        from foundry.intelligence_dashboard import IntelligenceDashboard
+        intel = IntelligenceDashboard()
 
+        agents_html = ""
+        for name in agent_names:
+            if name in histories:
+                agents_html += self._render_agent(name, histories[name])
+            agents_html += self._render_intelligence(name, intel)
+
+        combined_css = self._css() + intel.css()
         return f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Foundry — Agent Evolution</title>
-<style>{self._css()}</style></head><body>
+<html><head><meta charset="utf-8"><title>EvoForge — Agent Report</title>
+<style>{combined_css}</style></head><body>
 <header>
-<h1>🔥 Foundry — Agent Evolution Dashboard</h1>
-<p class="subtitle">Only showing agents with tracked evolution history</p>
+<h1>🔥 EvoForge — Agent Report</h1>
+<p class="subtitle">Evolution history + failure intelligence (mining · coverage · forecasting)</p>
 </header>
 {agents_html}
 <script>{self._js()}</script>
 </body></html>"""
+
+    def _render_intelligence(self, agent_name: str, intel) -> str:
+        """Render the failure-intelligence panels for an agent, if it has traces."""
+        try:
+            data = intel.collect_from_storage(str(self._path), agent_name)
+        except Exception:
+            return ""
+        if data.get("n_traces", 0) == 0:
+            return ""
+        return (
+            '<div class="agent-card">'
+            f'<h2>🔮 {agent_name} — Failure Intelligence</h2>'
+            f'{intel.panels(data)}'
+            "</div>"
+        )
 
     def _render_agent(self, agent_name: str, h: dict) -> str:
         events = h.get("events", [])

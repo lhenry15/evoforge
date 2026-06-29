@@ -31,6 +31,7 @@ dependencies = [
     "rich>=13.0",                # evolution report CLI output
     "typer>=0.9",                # CLI interface
     "httpx>=0.25",               # async HTTP for LLM calls
+    "requests>=2.31",            # sync HTTP for Ollama + evolution calls
     "pyyaml>=6.0",
     "jinja2>=3.1",               # prompt templating
 ]
@@ -57,7 +58,7 @@ docker = [
     "docker>=7.0",               # Docker sandbox connector (V0.2)
 ]
 all = [
-    "agent-foundry[lora,openai,together,slack,docker]",
+    "evoforge[lora,openai,together,slack,docker]",
 ]
 dev = [
     "pytest>=8.0",
@@ -73,17 +74,17 @@ dev = [
 
 [project.scripts]
 evoforge = "foundry.cli:main"
+foundry = "foundry.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/[org]/agent-foundry"
-Documentation = "https://agent-foundry.readthedocs.io"
-Repository = "https://github.com/[org]/agent-foundry"
-Issues = "https://github.com/[org]/agent-foundry/issues"
-Discord = "https://discord.gg/placeholder"
-Paper = "https://arxiv.org/abs/2506.XXXXX"
+Homepage = "https://github.com/lhenry15/evoforge"
+Documentation = "https://github.com/lhenry15/evoforge#readme"
+Repository = "https://github.com/lhenry15/evoforge"
+Issues = "https://github.com/lhenry15/evoforge/issues"
+Paper = "https://github.com/lhenry15/evoforge/blob/main/docs/arxiv_abstract.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/foundry"]
+packages = ["src/foundry", "src/evoforge"]
 
 [tool.ruff]
 src = ["src"]

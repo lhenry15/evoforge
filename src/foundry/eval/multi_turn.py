@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
+import inspect
 from typing import Any, Callable, Optional
 
 from pydantic import BaseModel, Field
@@ -88,7 +88,7 @@ class UserSimulator:
             if user_responses:
                 user_msg = user_responses.pop(0)
             elif self._pool:
-                user_msg = asyncio.run(self._generate_user_reply(turns, scenario))
+                user_msg = self._generate_user_reply(turns, scenario)
             else:
                 break  # no more user messages
 
@@ -158,7 +158,7 @@ class UserSimulator:
             n_total=len(results),
         )
 
-    async def _generate_user_reply(
+    def _generate_user_reply(
         self,
         turns: list[dict[str, str]],
         scenario: MultiTurnScenario,
@@ -173,4 +173,10 @@ Conversation so far:
 
 Reply with ONLY the user's next message (one sentence, natural language):"""
 
-        return await self._pool.generate(prompt, temperature=0.7, max_tokens=100)
+        raw = self._pool.generate(prompt, temperature=0.7, max_tokens=100)
+        if inspect.isawaitable(raw):
+            raise RuntimeError(
+                "UserSimulator received an async LLM pool in sync mode. "
+                "Use a synchronous pool (for example, OllamaLLMPool)."
+            )
+        return str(raw)

@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
-import json
-import re
+import inspect
 from typing import Any, Callable, Optional
 
 from pydantic import BaseModel, Field
 
 from foundry.core.types import CapabilityGap, EvalRunResult
+from foundry.llm.structured import extract_json
 
 
 class WorkflowStep(BaseModel):
@@ -112,15 +111,6 @@ class WorkflowEvolver:
         task_spec: str = "",
     ) -> WorkflowEvolutionResult:
         """Analyze failures and suggest workflow changes."""
-        return asyncio.run(self._analyze_async(agent, eval_result, gaps, task_spec))
-
-    async def _analyze_async(
-        self,
-        agent: Callable,
-        eval_result: EvalRunResult,
-        gaps: list[CapabilityGap],
-        task_spec: str,
-    ) -> WorkflowEvolutionResult:
         config = getattr(agent, "_foundry_agent_config", None)
         tools = getattr(agent, "_foundry_tools", [])
         system_prompt = config.system_prompt if config else ""
@@ -145,8 +135,18 @@ class WorkflowEvolver:
             failures=failures_str or "  (no details)",
         )
 
-        raw = await self._pool.generate(prompt, system=_WORKFLOW_SYSTEM, temperature=0.3, max_tokens=2048)
-        return self._parse(raw, current_workflow)
+        raw = self._pool.generate(
+            prompt,
+            system=_WORKFLOW_SYSTEM,
+            temperature=0.3,
+            max_tokens=2048,
+        )
+        if inspect.isawaitable(raw):
+            raise RuntimeError(
+                "WorkflowEvolver received an async LLM pool in sync mode. "
+                "Use a synchronous pool (for example, OllamaLLMPool)."
+            )
+        return self._parse(str(raw), current_workflow)
 
     def _infer_workflow(self, tools: list[Any]) -> list[WorkflowStep]:
         """Infer basic workflow from tool list."""
@@ -159,44 +159,38 @@ class WorkflowEvolver:
     def _parse(self, raw: str, current_workflow: list[WorkflowStep]) -> WorkflowEvolutionResult:
         result = WorkflowEvolutionResult(current_workflow=current_workflow)
 
-        try:
-            cleaned = raw.strip()
-            if "```" in cleaned:
-                match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', cleaned, re.DOTALL)
-                if match:
-                    cleaned = match.group(1)
-            if not cleaned.startswith("{"):
-                match = re.search(r'\{.*\}', cleaned, re.DOTALL)
-                if match:
-                    cleaned = match.group()
-
-            data = json.loads(cleaned)
-            result.summary = data.get("analysis", "")
-
-            for p in data.get("patches", []):
-                new_step = p.get("new_step", {})
-                steps = []
-                if new_step:
-                    steps.append(WorkflowStep(
-                        name=new_step.get("name", "unknown"),
-                        action=new_step.get("action", "check_condition"),
-                        tool=new_step.get("tool"),
-                    ))
-                result.patches.append(WorkflowPatch(
-                    patch_type=p.get("patch_type", "insert_step"),
-                    description=p.get("description", ""),
-                    reasoning=p.get("reasoning", ""),
-                    new_steps=steps,
-                ))
-
-            for s in data.get("suggested_workflow", []):
-                result.suggested_workflow.append(WorkflowStep(
-                    name=s.get("name", "?"),
-                    action=s.get("action", "call_tool"),
-                    tool=s.get("tool"),
-                ))
-
-        except (json.JSONDecodeError, TypeError, AttributeError):
+        data = extract_json(raw)
+        if not isinstance(data, dict):
             result.summary = f"Parse error: {raw[:100]}"
+            return result
+
+        result.summary = data.get("analysis", "")
+
+        for p in data.get("patches", []):
+            if not isinstance(p, dict):
+                continue
+            new_step = p.get("new_step", {})
+            steps = []
+            if new_step:
+                steps.append(WorkflowStep(
+                    name=new_step.get("name", "unknown"),
+                    action=new_step.get("action", "check_condition"),
+                    tool=new_step.get("tool"),
+                ))
+            result.patches.append(WorkflowPatch(
+                patch_type=p.get("patch_type", "insert_step"),
+                description=p.get("description", ""),
+                reasoning=p.get("reasoning", ""),
+                new_steps=steps,
+            ))
+
+        for s in data.get("suggested_workflow", []):
+            if not isinstance(s, dict):
+                continue
+            result.suggested_workflow.append(WorkflowStep(
+                name=s.get("name", "?"),
+                action=s.get("action", "call_tool"),
+                tool=s.get("tool"),
+            ))
 
         return result
