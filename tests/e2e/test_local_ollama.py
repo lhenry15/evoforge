@@ -28,14 +28,14 @@ try:
 except Exception:
     pytest.skip("Ollama not running at localhost:11434", allow_module_level=True)
 
-import foundry
-from foundry.core.agent_config import AgentConfig, ModelConfig, ModelHost
-from foundry.core.types import EvalCase, EvolutionAction, Message, ScoringMethod
-from foundry.llm.ollama import OllamaLLMPool
+import evoforge
+from evoforge.core.agent_config import AgentConfig, ModelConfig, ModelHost
+from evoforge.core.types import EvalCase, EvolutionAction, Message, ScoringMethod
+from evoforge.llm.ollama import OllamaLLMPool
 
 # ── SDK setup (local storage) ─────────────────────────────────────────────────
 
-SDK = foundry.init(
+SDK = evoforge.init(
     task_spec="A flight booking assistant that searches and books flights.",
     verbose=False,
 )
@@ -192,7 +192,7 @@ _original_llm_judge = None
 
 def _patch_eval_to_use_ollama():
     """Replace the LLM judge in EvalNamespace with local Ollama."""
-    import foundry.eval.namespace as ns
+    import evoforge.eval.namespace as ns
     import re
     import json
 
@@ -236,7 +236,7 @@ class TestLocalOllamaPipeline:
 
     def test_telemetry_records(self):
         from pathlib import Path
-        from foundry.data.storage.local import LocalStorageBackend
+        from evoforge.data.storage.local import LocalStorageBackend
 
         msg = [Message(role="user", content="Book UA123 for Bob")]
         local_flight_agent(msg)

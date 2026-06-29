@@ -10,12 +10,12 @@ from click.testing import CliRunner
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-import foundry
-from foundry.cli import cli
-from foundry.core.config import SDKConfig, StorageConfig
-from foundry.core.types import EvalCase, EvalCaseResult, Message, ScoringMethod
-from foundry.intelligence_dashboard import IntelligenceDashboard
-from foundry.trace import TraceNormalizer
+import evoforge
+from evoforge.cli import cli
+from evoforge.core.config import SDKConfig, StorageConfig
+from evoforge.core.types import EvalCase, EvalCaseResult, Message, ScoringMethod
+from evoforge.intelligence_dashboard import IntelligenceDashboard
+from evoforge.trace import TraceNormalizer
 
 
 def _seed(sdk):
@@ -43,7 +43,7 @@ def _seed(sdk):
 
 
 def test_intelligence_dashboard_renders_all_panels(tmp_path: Path):
-    sdk = foundry.FoundrySDK(SDKConfig(task_spec="A flight agent.", storage=StorageConfig(path=tmp_path)))
+    sdk = evoforge.FoundrySDK(SDKConfig(task_spec="A flight agent.", storage=StorageConfig(path=tmp_path)))
     _seed(sdk)
 
     out = tmp_path / "insights.html"
@@ -66,7 +66,7 @@ def test_insights_cli_registered():
 
 
 def test_collect_returns_expected_keys(tmp_path: Path):
-    sdk = foundry.FoundrySDK(SDKConfig(task_spec="A flight agent.", storage=StorageConfig(path=tmp_path)))
+    sdk = evoforge.FoundrySDK(SDKConfig(task_spec="A flight agent.", storage=StorageConfig(path=tmp_path)))
     _seed(sdk)
     data = IntelligenceDashboard.collect(sdk, "agent")
     assert data["n_traces"] == 16
@@ -77,9 +77,9 @@ def test_collect_returns_expected_keys(tmp_path: Path):
 
 def test_unified_report_includes_intelligence_panels(tmp_path: Path):
     """evoforge report (DashboardGenerator) folds in the intelligence panels."""
-    from foundry.dashboard import DashboardGenerator
+    from evoforge.dashboard import DashboardGenerator
 
-    sdk = foundry.FoundrySDK(SDKConfig(task_spec="A flight agent.", storage=StorageConfig(path=tmp_path)))
+    sdk = evoforge.FoundrySDK(SDKConfig(task_spec="A flight agent.", storage=StorageConfig(path=tmp_path)))
     _seed(sdk)
 
     out = tmp_path / "report.html"
@@ -94,7 +94,7 @@ def test_unified_report_includes_intelligence_panels(tmp_path: Path):
 
 
 def test_collect_from_storage_without_sdk(tmp_path: Path):
-    sdk = foundry.FoundrySDK(SDKConfig(task_spec="A flight agent.", storage=StorageConfig(path=tmp_path)))
+    sdk = evoforge.FoundrySDK(SDKConfig(task_spec="A flight agent.", storage=StorageConfig(path=tmp_path)))
     _seed(sdk)
     data = IntelligenceDashboard.collect_from_storage(str(tmp_path), "agent")
     assert data["n_traces"] == 16

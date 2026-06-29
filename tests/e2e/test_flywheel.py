@@ -35,21 +35,21 @@ try:
 except ImportError:
     pytest.skip("mlx-lm not installed", allow_module_level=True)
 
-import foundry
-from foundry.core.agent_config import AgentConfig, ModelConfig, ModelHost
-from foundry.core.types import (
+import evoforge
+from evoforge.core.agent_config import AgentConfig, ModelConfig, ModelHost
+from evoforge.core.types import (
     EvalCase,
     EvolutionAction,
     Message,
     ScoringMethod,
 )
-from foundry.llm.ollama import OllamaLLMPool
-from foundry.training.backends.mlx_lora import MLXLoRABackend, MLXLoRAConfig
-from foundry.evolution.namespace import CycleResult
+from evoforge.llm.ollama import OllamaLLMPool
+from evoforge.training.backends.mlx_lora import MLXLoRABackend, MLXLoRAConfig
+from evoforge.evolution.namespace import CycleResult
 
 # ── SDK ───────────────────────────────────────────────────────────────────────
 
-SDK = foundry.init(
+SDK = evoforge.init(
     task_spec=(
         "A flight booking assistant. Searches flights and books them. "
         "Must ALWAYS confirm price before booking."
@@ -180,7 +180,7 @@ def flywheel_agent(messages: list[Message]) -> str:
 
 def _patch_eval():
     import re, json
-    import foundry.eval.namespace as ns
+    import evoforge.eval.namespace as ns
 
     async def _local_judge(self, case, response):
         pool = OllamaLLMPool(model="qwen2.5:3b")
@@ -277,7 +277,7 @@ class TestFlywheel:
 
     def test_execute_cycle_skips_when_no_gaps(self):
         """If all capabilities are above threshold, no action is taken."""
-        from foundry.core.types import EvalRunResult, EvalCaseResult
+        from evoforge.core.types import EvalRunResult, EvalCaseResult
 
         # Simulate a perfect eval result
         perfect_result = EvalRunResult(

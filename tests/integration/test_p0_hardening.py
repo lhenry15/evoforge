@@ -12,8 +12,8 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
 import evoforge
-import foundry
-from foundry.cli import cli
+import evoforge
+from evoforge.cli import cli
 
 
 def test_evoforge_import_alias_exposes_public_api():
@@ -28,7 +28,7 @@ def test_evoforge_submodule_alias_resolves():
 
 
 def test_env_namespace_connect_lifecycle():
-    sdk = foundry.init(task_spec="P0 env wiring test")
+    sdk = evoforge.init(task_spec="P0 env wiring test")
 
     class DummyEnv:
         def reset(self, seed):  # noqa: ANN001
@@ -70,7 +70,7 @@ def test_env_namespace_connect_lifecycle():
 
 
 def test_env_namespace_rejects_invalid_connector():
-    sdk = foundry.init(task_spec="P0 invalid env wiring test")
+    sdk = evoforge.init(task_spec="P0 invalid env wiring test")
 
     class InvalidEnv:
         def close(self):

@@ -12,9 +12,9 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-import foundry
-from foundry.core.config import SDKConfig, StorageConfig
-from foundry.core.types import (
+import evoforge
+from evoforge.core.config import SDKConfig, StorageConfig
+from evoforge.core.types import (
     EvalCase,
     EvalCaseResult,
     EvalRunResult,
@@ -22,7 +22,7 @@ from foundry.core.types import (
     ScoringMethod,
     Trajectory,
 )
-from foundry.trace import (
+from evoforge.trace import (
     FailureMode,
     TraceNormalizer,
     TraceOutcome,
@@ -37,7 +37,7 @@ def _sdk(tmp_path: Path):
         task_spec="A flight booking assistant.",
         storage=StorageConfig(path=tmp_path),
     )
-    return foundry.FoundrySDK(config)
+    return evoforge.FoundrySDK(config)
 
 
 def _failing_case_result(case_id="c1", capability="booking") -> EvalCaseResult:
@@ -194,6 +194,6 @@ def test_sdk_trace_namespace_records_eval_run(tmp_path: Path):
 
 
 def test_trace_types_exposed_on_public_api():
-    assert foundry.TraceRecord is not None
-    assert foundry.FailureMode is not None
-    assert foundry.TraceNormalizer is not None
+    assert evoforge.TraceRecord is not None
+    assert evoforge.FailureMode is not None
+    assert evoforge.TraceNormalizer is not None

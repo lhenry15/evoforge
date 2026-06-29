@@ -34,15 +34,15 @@ try:
 except ImportError:
     pytest.skip("mlx-lm not installed", allow_module_level=True)
 
-import foundry
-from foundry.core.agent_config import AgentConfig, ModelConfig, ModelHost
-from foundry.core.types import EvalCase, EvolutionAction, Message, ScoringMethod
-from foundry.llm.ollama import OllamaLLMPool
-from foundry.training.backends.mlx_lora import MLXLoRABackend, MLXLoRAConfig
+import evoforge
+from evoforge.core.agent_config import AgentConfig, ModelConfig, ModelHost
+from evoforge.core.types import EvalCase, EvolutionAction, Message, ScoringMethod
+from evoforge.llm.ollama import OllamaLLMPool
+from evoforge.training.backends.mlx_lora import MLXLoRABackend, MLXLoRAConfig
 
 # ── SDK ───────────────────────────────────────────────────────────────────────
 
-SDK = foundry.init(
+SDK = evoforge.init(
     task_spec=(
         "A flight booking assistant. Searches flights and books them. "
         "Must ALWAYS confirm the total price before finalizing a booking."
@@ -99,7 +99,7 @@ EVAL_CASES = [
 
 def _patch_eval():
     import re
-    import foundry.eval.namespace as ns
+    import evoforge.eval.namespace as ns
 
     async def _local_judge(self, case, response):
         pool = OllamaLLMPool(model="qwen2.5:3b")
@@ -265,7 +265,7 @@ class TestImprovement:
         # For this demo, we directly create targeted training examples that
         # teach the model to output JSON booking confirmations.
         # In production, DataFactory would generate these from the gap signals.
-        from foundry.factory.data_factory import TrainingExample
+        from evoforge.factory.data_factory import TrainingExample
 
         json_training_examples = [
             TrainingExample(capability="json_booking", instruction="Book flight UA200 for Mike at $310",

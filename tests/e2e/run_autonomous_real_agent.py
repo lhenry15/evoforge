@@ -16,9 +16,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-import foundry
-from foundry.core.config import SDKConfig, StorageConfig
-from foundry.llm.ollama import OllamaLLMPool
+import evoforge
+from evoforge.core.config import SDKConfig, StorageConfig
+from evoforge.llm.ollama import OllamaLLMPool
 
 STORE = Path.home() / "agent-foundry" / ".foundry" / "real_demo"
 if STORE.exists():
@@ -39,7 +39,7 @@ agent = ex.flight_agent
 agent_name = agent.__name__
 
 # 2. Fresh SDK we control, pointed at a clean store, same task spec.
-sdk = foundry.FoundrySDK(SDKConfig(
+sdk = evoforge.FoundrySDK(SDKConfig(
     task_spec=ex.sdk.config.task_spec,
     storage=StorageConfig(path=STORE),
 ))
@@ -114,7 +114,7 @@ except Exception as e:
     log(f"  -> forecast skipped: {e}")
 
 # 10. Unified report.
-from foundry.dashboard import DashboardGenerator
+from evoforge.dashboard import DashboardGenerator
 report = DashboardGenerator(storage_path=str(STORE)).generate(str(STORE / "report.html"))
 log(f"REPORT: {report}")
 print("REPORT_PATH=" + report)

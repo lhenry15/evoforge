@@ -26,15 +26,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from openai import OpenAI
 
-import foundry
-from foundry.core.agent_config import AgentConfig, ModelConfig, ModelHost
-from foundry.core.types import EvalCase, Message, ScoringMethod
-from foundry.llm.ollama import OllamaLLMPool
-from foundry.evolution.prompt_evolver import PromptEvolver
+import evoforge
+from evoforge.core.agent_config import AgentConfig, ModelConfig, ModelHost
+from evoforge.core.types import EvalCase, Message, ScoringMethod
+from evoforge.llm.ollama import OllamaLLMPool
+from evoforge.evolution.prompt_evolver import PromptEvolver
 
 # ── SDK ───────────────────────────────────────────────────────────────────────
 
-SDK = foundry.init(
+SDK = evoforge.init(
     task_spec="A flight booking assistant. Searches and books flights. Must validate inputs and confirm price.",
     verbose=False,
 )

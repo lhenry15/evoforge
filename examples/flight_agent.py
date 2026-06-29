@@ -18,12 +18,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from openai import OpenAI
 
-import evoforge as foundry
+import evoforge
 from evoforge import AgentConfig, ModelConfig, ModelHost, Message
 
 # ── SDK setup ─────────────────────────────────────────────────────────────────
 
-sdk = foundry.init(
+sdk = evoforge.init(
     task_spec=(
         "A flight booking assistant. Searches for available flights "
         "and books them for passengers. Always confirms price before booking."

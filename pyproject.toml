@@ -73,8 +73,7 @@ dev = [
 ]
 
 [project.scripts]
-evoforge = "foundry.cli:main"
-foundry = "foundry.cli:main"
+evoforge = "evoforge.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/lhenry15/evoforge"
@@ -84,7 +83,7 @@ Issues = "https://github.com/lhenry15/evoforge/issues"
 Paper = "https://github.com/lhenry15/evoforge/blob/main/docs/arxiv_abstract.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/foundry", "src/evoforge"]
+packages = ["src/evoforge"]
 
 [tool.ruff]
 src = ["src"]
@@ -103,8 +102,8 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "--cov=foundry --cov-report=term-missing --cov-fail-under=70"
+addopts = "--cov=evoforge --cov-report=term-missing --cov-fail-under=70"
 
 [tool.coverage.run]
-source = ["src/foundry"]
+source = ["src/evoforge"]
 omit = ["*/tests/*"]

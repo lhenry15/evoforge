@@ -14,12 +14,12 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-import foundry
-from foundry.core.config import SDKConfig, StorageConfig
-from foundry.core.types import EvalCase, EvalCaseResult, Message, ScoringMethod
-from foundry.coverage import AdaptiveEvalExpander, CoverageMapper, CoverageReport
-from foundry.mining import FailureModeMiner
-from foundry.trace import TraceNormalizer
+import evoforge
+from evoforge.core.config import SDKConfig, StorageConfig
+from evoforge.core.types import EvalCase, EvalCaseResult, Message, ScoringMethod
+from evoforge.coverage import AdaptiveEvalExpander, CoverageMapper, CoverageReport
+from evoforge.mining import FailureModeMiner
+from evoforge.trace import TraceNormalizer
 
 
 class FakePool:
@@ -204,9 +204,9 @@ def test_coverage_report_text_and_dict():
 
 def test_sdk_coverage_namespace_end_to_end(tmp_path: Path):
     config = SDKConfig(task_spec="A flight booking assistant.", storage=StorageConfig(path=tmp_path))
-    sdk = foundry.FoundrySDK(config)
+    sdk = evoforge.FoundrySDK(config)
 
-    from foundry.core.types import EvalRunResult
+    from evoforge.core.types import EvalRunResult
     cases = [
         EvalCase(id="e1", capability="booking",
                  messages=[Message(role="user", content="Book UA123")],
@@ -239,6 +239,6 @@ def test_sdk_coverage_namespace_end_to_end(tmp_path: Path):
 
 
 def test_coverage_types_exposed_on_public_api():
-    assert foundry.CoverageMapper is not None
-    assert foundry.AdaptiveEvalExpander is not None
-    assert foundry.CoverageMap is not None
+    assert evoforge.CoverageMapper is not None
+    assert evoforge.AdaptiveEvalExpander is not None
+    assert evoforge.CoverageMap is not None

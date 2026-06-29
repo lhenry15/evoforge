@@ -28,13 +28,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from openai import OpenAI
 
-import foundry
-from foundry.core.agent_config import AgentConfig, ModelConfig, ModelHost
-from foundry.core.types import EvalCase, Message, ScoringMethod
-from foundry.core.history import AgentEvolutionHistory
-from foundry.llm.ollama import OllamaLLMPool
-from foundry.evolution.prompt_evolver import PromptEvolver
-from foundry.evolution.skill_registry import SkillRegistry
+import evoforge
+from evoforge.core.agent_config import AgentConfig, ModelConfig, ModelHost
+from evoforge.core.types import EvalCase, Message, ScoringMethod
+from evoforge.core.history import AgentEvolutionHistory
+from evoforge.llm.ollama import OllamaLLMPool
+from evoforge.evolution.prompt_evolver import PromptEvolver
+from evoforge.evolution.skill_registry import SkillRegistry
 
 # ── Storage ───────────────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ if history_dir.exists():
 
 # ── The ONE agent (mutable state — prompt and skills evolve) ──────────────────
 
-SDK = foundry.init(
+SDK = evoforge.init(
     task_spec="A flight booking assistant. Searches flights, confirms price, books for passengers.",
     verbose=False,
 )

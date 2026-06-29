@@ -19,10 +19,10 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-import foundry
-from foundry.core.agent_config import AgentConfig, ModelConfig, ModelHost
-from foundry.core.types import Message
-from foundry.evolution.engine import (
+import evoforge
+from evoforge.core.agent_config import AgentConfig, ModelConfig, ModelHost
+from evoforge.core.types import Message
+from evoforge.evolution.engine import (
     _can_fine_tune,
     _can_auto_promote,
     _get_system_prompt,
@@ -44,7 +44,7 @@ def _make_swap_fn(agent_name: str):
 
 
 def _make_sdk():
-    return foundry.init(task_spec="A flight booking assistant for testing.")
+    return evoforge.init(task_spec="A flight booking assistant for testing.")
 
 
 def _make_config(with_swap: bool = True) -> AgentConfig:

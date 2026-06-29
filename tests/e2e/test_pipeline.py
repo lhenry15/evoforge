@@ -25,9 +25,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 if not os.environ.get("GITHUB_TOKEN"):
     pytest.skip("GITHUB_TOKEN not set", allow_module_level=True)
 
-import foundry
-from foundry.core.agent_config import AgentConfig, ModelConfig, ModelHost
-from foundry.core.types import (
+import evoforge
+from evoforge.core.agent_config import AgentConfig, ModelConfig, ModelHost
+from evoforge.core.types import (
     EvalCase,
     EvolutionAction,
     Message,
@@ -36,7 +36,7 @@ from foundry.core.types import (
 
 # ── Shared SDK ────────────────────────────────────────────────────────────────
 
-SDK = foundry.init(
+SDK = evoforge.init(
     task_spec=(
         "A flight booking assistant. Given a user request, search for "
         "available flights and book the best option. Always confirm price."
@@ -334,7 +334,7 @@ class TestPlainAgentPipeline:
     def test_telemetry_records_trajectory(self):
         """Verify that calling the agent persists a trajectory to disk."""
         from pathlib import Path
-        from foundry.data.storage.local import LocalStorageBackend
+        from evoforge.data.storage.local import LocalStorageBackend
 
         msg = [Message(role="user", content="Any flights SFO to NYC on 2024-12-10?")]
         plain_flight_agent(msg)

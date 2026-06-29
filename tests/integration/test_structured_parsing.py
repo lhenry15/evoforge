@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-from foundry.llm.structured import (
+from evoforge.llm.structured import (
     coerce_records,
     coerce_strings,
     extract_json,

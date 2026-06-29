@@ -13,16 +13,16 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-import foundry
-from foundry.core.config import SDKConfig, StorageConfig
-from foundry.core.types import EvalCase, EvalCaseResult, Message, ScoringMethod
-from foundry.mining import FailureModeMiner
-from foundry.mining.schema import FailureExample, FailureModeCluster
-from foundry.synthesis import DataSynthesizer, QualityGate, SyntheticExample
-from foundry.synthesis.generator import ModeConditionedGenerator
-from foundry.synthesis.schema import SynthFormat
-from foundry.trace import TraceNormalizer
-from foundry.trace.schema import FailureMode
+import evoforge
+from evoforge.core.config import SDKConfig, StorageConfig
+from evoforge.core.types import EvalCase, EvalCaseResult, Message, ScoringMethod
+from evoforge.mining import FailureModeMiner
+from evoforge.mining.schema import FailureExample, FailureModeCluster
+from evoforge.synthesis import DataSynthesizer, QualityGate, SyntheticExample
+from evoforge.synthesis.generator import ModeConditionedGenerator
+from evoforge.synthesis.schema import SynthFormat
+from evoforge.trace import TraceNormalizer
+from evoforge.trace.schema import FailureMode
 
 
 class FakePool:
@@ -201,10 +201,10 @@ def test_synthesized_examples_convert_to_training_examples():
 
 def test_sdk_synth_namespace_end_to_end(tmp_path: Path):
     config = SDKConfig(task_spec="A flight booking assistant.", storage=StorageConfig(path=tmp_path))
-    sdk = foundry.FoundrySDK(config)
+    sdk = evoforge.FoundrySDK(config)
 
     # Seed traces via an eval run with real inputs.
-    from foundry.core.types import EvalRunResult
+    from evoforge.core.types import EvalRunResult
     cases = [
         EvalCase(id="e1", capability="booking",
                  messages=[Message(role="user", content="Book UA123 for John")],
@@ -230,6 +230,6 @@ def test_sdk_synth_namespace_end_to_end(tmp_path: Path):
 
 
 def test_synthesis_types_exposed_on_public_api():
-    assert foundry.DataSynthesizer is not None
-    assert foundry.SyntheticExample is not None
-    assert foundry.SynthFormat is not None
+    assert evoforge.DataSynthesizer is not None
+    assert evoforge.SyntheticExample is not None
+    assert evoforge.SynthFormat is not None

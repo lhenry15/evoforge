@@ -17,12 +17,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from openai import OpenAI
 
-import evoforge as foundry
+import evoforge
 from evoforge import AgentConfig, ModelConfig, ModelHost, Message
 
 # ── SDK setup ─────────────────────────────────────────────────────────────────
 
-sdk = foundry.init(
+sdk = evoforge.init(
     task_spec=(
         "A Python code review assistant. Analyzes code for bugs, security issues, "
         "and style problems. Provides suggestions for improvement."

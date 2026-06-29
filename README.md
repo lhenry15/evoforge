@@ -204,16 +204,21 @@ ollama pull qwen2.5:3b
 ## Project Structure
 
 ```
-src/foundry/
+src/evoforge/
 ├── core/           # SDK, config, types, agent history
-├── eval/           # Eval runner, LLM judge, multi-turn, expander
+├── trace/          # Normalized traces, failure signatures, lineage
+├── mining/         # Failure-mode clustering + root-cause labeling
+├── synthesis/      # Mode-conditioned training-data generation
+├── coverage/       # Adaptive eval expansion (blind-spot closing)
+├── forecast/       # Pre-deploy failure forecasting + calibration
+├── eval/           # Eval runner, LLM judge, multi-turn
 ├── evolution/      # Prompt evolver, skill registry, architecture search
-├── factory/        # Data generation (teacher, rejection sampling, DPO)
+├── factory/        # Training-example formatting + DPO pairs
 ├── training/       # MLX LoRA backend
 ├── bootstrap/      # Zero-shot eval case generation
-├── llm/            # Ollama + GitHub Models pools
+├── llm/            # Ollama (structured outputs) + GitHub Models pools
 ├── dashboard.py    # HTML report generator
-└── cli.py          # Click CLI
+└── cli.py          # CLI
 ```
 
 ---

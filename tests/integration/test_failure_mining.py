@@ -13,13 +13,13 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-import foundry
-import foundry.mining
-from foundry.core.config import SDKConfig, StorageConfig
-from foundry.core.types import EvalCaseResult, EvalRunResult, Message, ScoringMethod
-from foundry.mining import FailureModeMiner, FailureModeReport
-from foundry.trace import TraceNormalizer
-from foundry.trace.schema import FailureMode
+import evoforge
+import evoforge.mining
+from evoforge.core.config import SDKConfig, StorageConfig
+from evoforge.core.types import EvalCaseResult, EvalRunResult, Message, ScoringMethod
+from evoforge.mining import FailureModeMiner, FailureModeReport
+from evoforge.trace import TraceNormalizer
+from evoforge.trace.schema import FailureMode
 
 
 def _failure(case_id: str, capability: str, response: str) -> EvalCaseResult:
@@ -141,7 +141,7 @@ def test_sdk_mine_namespace_end_to_end(tmp_path: Path):
         task_spec="A flight booking assistant.",
         storage=StorageConfig(path=tmp_path),
     )
-    sdk = foundry.FoundrySDK(config)
+    sdk = evoforge.FoundrySDK(config)
 
     run = EvalRunResult(
         agent_name="agent",
@@ -166,9 +166,9 @@ def test_sdk_mine_namespace_end_to_end(tmp_path: Path):
 
 
 def test_mining_types_exposed_on_public_api():
-    assert foundry.FailureModeMiner is not None
-    assert foundry.FailureModeReport is not None
-    assert foundry.MiningResult is not None
+    assert evoforge.FailureModeMiner is not None
+    assert evoforge.FailureModeReport is not None
+    assert evoforge.MiningResult is not None
 
 
 # ── LLM re-classification of unknown failures ────────────────────────────────────
@@ -176,7 +176,7 @@ def test_mining_types_exposed_on_public_api():
 
 def _unknown_failure(case_id, capability, user, response, judge):
     """A failure the heuristic extractor cannot categorize (mode=unknown)."""
-    from foundry.core.types import EvalCase
+    from evoforge.core.types import EvalCase
     norm = TraceNormalizer()
     case = EvalCase(
         id=case_id, capability=capability,
@@ -243,7 +243,7 @@ def test_reclassification_skipped_without_pool():
 def test_confident_modes_not_reclassified():
     # A clear ERROR -> environment_fragility at confidence 0.6 (above threshold).
     norm = TraceNormalizer()
-    from foundry.core.types import EvalCase
+    from evoforge.core.types import EvalCase
     case = EvalCase(id="e1", capability="booking", messages=[Message(role="user", content="book")],
                     expected="ok", scoring_method=ScoringMethod.CONTAINS)
     rec = norm.from_eval_result(
@@ -260,7 +260,7 @@ def test_confident_modes_not_reclassified():
 
 def test_sdk_mine_persist_writes_reclassified_modes(tmp_path: Path):
     config = SDKConfig(task_spec="A flight agent.", storage=StorageConfig(path=tmp_path))
-    sdk = foundry.FoundrySDK(config)
+    sdk = evoforge.FoundrySDK(config)
     sdk.trace.store.save_many([
         _unknown_failure("b1", "booking", "Book a flight NY to LA",
                          "Here are flights: UA123 $320.", "did not book"),
@@ -277,4 +277,4 @@ def test_sdk_mine_persist_writes_reclassified_modes(tmp_path: Path):
 
 
 def test_llm_classifier_exposed_on_public_api():
-    assert foundry.mining.LLMModeClassifier is not None
+    assert evoforge.mining.LLMModeClassifier is not None

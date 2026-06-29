@@ -22,14 +22,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-import foundry
-from foundry.core.agent_config import AgentConfig, ModelConfig, ModelHost
-from foundry.core.types import (
+import evoforge
+from evoforge.core.agent_config import AgentConfig, ModelConfig, ModelHost
+from evoforge.core.types import (
     EvalCase, EvalRunResult, EvolutionAction, Message, ScoringMethod,
 )
-from foundry.llm.ollama import OllamaLLMPool
-from foundry.training.backends.mlx_lora import MLXLoRABackend, MLXLoRAConfig
-from foundry.factory.data_factory import DataFactory, DataFactoryConfig, TrainingExample
+from evoforge.llm.ollama import OllamaLLMPool
+from evoforge.training.backends.mlx_lora import MLXLoRABackend, MLXLoRAConfig
+from evoforge.factory.data_factory import DataFactory, DataFactoryConfig, TrainingExample
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ PYTHON = os.path.expanduser("~/anaconda3/envs/agent-foundry/bin/python")
 BASE_MODEL = "Qwen/Qwen2.5-3B-Instruct"
 SYSTEM_PROMPT = "You are a helpful flight booking assistant."
 
-SDK = foundry.init(
+SDK = evoforge.init(
     task_spec="A flight booking assistant. Searches and books flights. Confirms price.",
     verbose=False,
 )

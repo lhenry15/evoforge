@@ -15,13 +15,13 @@ from click.testing import CliRunner
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-import foundry
-from foundry.cli import cli
-from foundry.core.config import SDKConfig, StorageConfig
-from foundry.core.types import EvalCase, EvalCaseResult, Message, ScoringMethod
-from foundry.forecast import DriftMonitor, RiskForecaster, RiskLevel
-from foundry.trace import TraceNormalizer
-from foundry.trace.schema import TraceRecord
+import evoforge
+from evoforge.cli import cli
+from evoforge.core.config import SDKConfig, StorageConfig
+from evoforge.core.types import EvalCase, EvalCaseResult, Message, ScoringMethod
+from evoforge.forecast import DriftMonitor, RiskForecaster, RiskLevel
+from evoforge.trace import TraceNormalizer
+from evoforge.trace.schema import TraceRecord
 
 
 def _trace(cid: str, capability: str, text: str, fail: bool) -> TraceRecord:
@@ -188,7 +188,7 @@ def test_no_drift_on_similar_window():
 
 def test_sdk_forecast_namespace(tmp_path: Path):
     config = SDKConfig(task_spec="A flight booking assistant.", storage=StorageConfig(path=tmp_path))
-    sdk = foundry.FoundrySDK(config)
+    sdk = evoforge.FoundrySDK(config)
     sdk.trace.store.save_many(_dataset())
 
     sdk.forecast.fit("agent")
@@ -207,6 +207,6 @@ def test_forecast_cli_registered():
 
 
 def test_forecast_types_exposed_on_public_api():
-    assert foundry.RiskForecaster is not None
-    assert foundry.ForecastRequest is not None
-    assert foundry.DriftMonitor is not None
+    assert evoforge.RiskForecaster is not None
+    assert evoforge.ForecastRequest is not None
+    assert evoforge.DriftMonitor is not None

@@ -13,9 +13,9 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-import foundry
-from foundry.core.config import SDKConfig, StorageConfig
-from foundry.core.types import (
+import evoforge
+from evoforge.core.config import SDKConfig, StorageConfig
+from evoforge.core.types import (
     EvalCase,
     EvalCaseResult,
     EvalRunResult,
@@ -87,7 +87,7 @@ def _seed_traces(sdk):
 
 
 def test_execute_cycle_uses_synthesis_and_coverage(tmp_path: Path):
-    sdk = foundry.FoundrySDK(SDKConfig(
+    sdk = evoforge.FoundrySDK(SDKConfig(
         task_spec="A flight booking assistant that books flights.",
         storage=StorageConfig(path=tmp_path),
     ))
@@ -128,7 +128,7 @@ def test_execute_cycle_uses_synthesis_and_coverage(tmp_path: Path):
 
 def test_old_generator_modules_are_removed():
     import importlib
-    for mod in ("foundry.factory.strategies", "foundry.eval.expander"):
+    for mod in ("evoforge.factory.strategies", "evoforge.eval.expander"):
         try:
             importlib.import_module(mod)
             assert False, f"{mod} should have been removed"

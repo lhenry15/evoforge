@@ -7,8 +7,8 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-from foundry.coverage.case_quality import EvalCaseQualityGate
-from foundry.coverage.criterion import CriterionDeriver, SuccessCriterion
+from evoforge.coverage.case_quality import EvalCaseQualityGate
+from evoforge.coverage.criterion import CriterionDeriver, SuccessCriterion
 
 
 class _CriterionPool:
