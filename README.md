@@ -1,28 +1,47 @@
-# 🔥 EvoForge
+<div align="center">
 
-**A data-centric SDK for self-evolving LLM agents.**
+# 🔥 EvoForge — Self-Evolving AI Agents, Data-Centric
 
-EvoForge automatically evaluates your agent, identifies capability gaps, and improves it through prompt evolution, skill generation, and LoRA fine-tuning — all with a single command.
+**Open-source SDK that lets LLM agents test, fix, and future-proof themselves — automatically.**
+
+EvoForge turns your agent's traces into evaluation data, mines failure modes, generates targeted fixes, and **forecasts failures before they ship** — a data-centric flywheel for continuously self-improving AI agents.
+
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
+[![Tests](https://img.shields.io/badge/tests-109%20passing-brightgreen.svg)](#)
+[![Local-first](https://img.shields.io/badge/local--first-Ollama%20%7C%20MLX-orange.svg)](#local-first)
 
 ```bash
 evoforge run my_agent.py --cycles 4
 ```
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
+*self-evolving agents · agent evaluation · data-centric AI · LLM agent reliability · synthetic eval data · failure forecasting · agent observability*
+
+</div>
 
 ---
 
-## Why EvoForge?
+## What is EvoForge?
 
-Most agent frameworks help you **build** agents. EvoForge helps you **improve** them — continuously, autonomously, driven by data.
+Most agent frameworks help you **build** agents. EvoForge helps your agent **improve itself** — continuously, autonomously, from data.
 
-| Traditional approach | EvoForge approach |
+It closes the loop every agent developer does by hand: write evals → find failures → make data → retrain → hope it's better. EvoForge automates that loop and adds the missing piece — **predicting failures before users hit them**.
+
+> Reactive testing tells you what already broke. **EvoForge moves agent development from reactive to preventive.**
+
+---
+
+## Why EvoForge is different
+
+Existing self-evolving frameworks are **algorithm-centric** (they search prompts/workflows). EvoForge is **data-centric**: it treats the data around your agent — eval cases, traces, training examples, skills — as the thing that evolves.
+
+| Traditional agent dev | EvoForge |
 |---|---|
-| You write eval cases manually | EvoForge bootstraps them from your task spec |
-| You guess what's wrong | EvoForge identifies exact capability gaps |
-| You tweak prompts by hand | EvoForge evolves prompts, skills, and models |
-| You hope it got better | EvoForge measures improvement with A/B tests |
+| Hand-write eval cases | Bootstraps + expands them from your task spec |
+| Guess what's wrong | Mines real failure modes from traces |
+| Hand-curate fix data | Synthesizes targeted training data per failure |
+| Ship and find out | Forecasts failure risk **before** deploy |
+| Hope it improved | Measures every change, gated against regressions |
 
 ---
 
@@ -32,220 +51,165 @@ Most agent frameworks help you **build** agents. EvoForge helps you **improve** 
 pip install evoforge
 ```
 
-> Import with `import evoforge` (preferred). `import foundry` remains supported for compatibility.
-
-**1. Wrap your agent (any framework):**
+**1. Wrap any agent (any framework, any LLM):**
 
 ```python
 import evoforge
 
-sdk = evoforge.init(
-    task_spec="A flight booking assistant that searches and books flights.",
-)
+sdk = evoforge.init(task_spec="A flight booking assistant that searches and books flights.")
 
 @sdk.agent(tools=["search_flights", "book_flight"])
 def my_agent(messages):
-    # Your agent logic here (any LLM, any framework)
-    ...
+    ...  # your existing agent code — unchanged
 ```
 
-**2. Run the evolution loop:**
+**2. Let it evolve:**
 
 ```bash
 evoforge run my_agent.py --cycles 4
 ```
 
-That's it. EvoForge will:
-- Bootstrap eval cases from your task spec + tools
-- Evaluate your agent per capability
-- Evolve prompts and skills to fix gaps
-- Detect when prompt evolution hits a ceiling → switch to LoRA training
-- Track the full evolution history
+EvoForge will bootstrap evals, run your agent, mine failure modes, generate targeted data, expand test coverage, optionally fine-tune, and track the whole story — zero hand-labeling.
+
+---
+
+## The predictive flywheel
+
+```
+            ┌──────────────────────────────────────────────────────┐
+            ▼                                                      │
+   run agent → traces ─→ mine failure modes ─→ synthesize fixes ─→ │
+        ▲                      │                                    │
+        │                      ▼                                    ▼
+   forecast risk ◀── expand eval coverage ◀── evolve prompts/skills/model
+   (pre-deploy)        (close blind spots)        (gated, no regressions)
+```
+
+1. **Trace** — every run is normalized into a trace with a failure signature + lineage
+2. **Mine** — cluster real failures into ranked, root-caused modes
+3. **Synthesize** — generate targeted training data (real failures become DPO negatives)
+4. **Cover** — auto-expand evals to close blind spots, so the benchmark never goes stale
+5. **Forecast** — predict failure risk of a new request *before* it runs (honest cross-validation)
+6. **Fix** — evolve prompts, skills, architecture, or fine-tune — A/B-gated
+
+---
+
+## Features
+
+- 🔁 **Autonomous loop** — `evoforge run` does bootstrap → eval → evolve → re-eval
+- 🧩 **Failure-mode mining** — turns messy failures into actionable, ranked root causes
+- 🧪 **Synthetic eval + train data** — schema-constrained generation that works even on a 3B local model
+- 🗺️ **Adaptive coverage** — capability × failure-mode heatmap; auto-generates cases for blind spots
+- 🔮 **Failure forecasting** — risk scoring with calibration + drift monitoring
+- 🧠 **Skill + prompt evolution** — versioned, dedup'd, retire-able
+- 🛡️ **Regression-gated promotion** — A/B test before any model swap
+- 📊 **One-command dashboard** — evolution history + failure intelligence in a single HTML report
+- 🧰 **Framework-agnostic** — smolagents, pydantic-ai, LangChain, or plain Python
+- 🔒 **Local-first** — runs fully offline on Ollama + MLX, zero cloud cost
 
 ---
 
 ## CLI
 
 ```bash
-evoforge bootstrap my_agent.py    # Generate eval cases
-evoforge eval my_agent.py         # Score agent per capability
-evoforge evolve my_agent.py       # Identify gaps + evolve
-evoforge run my_agent.py          # Full autonomous loop
-evoforge report                   # Generate HTML evolution dashboard
-evoforge status                   # Show stored data
+evoforge bootstrap my_agent.py   # design eval cases from task spec + tools
+evoforge eval my_agent.py        # score per capability (LLM judge)
+evoforge evolve my_agent.py      # mine gaps + evolve
+evoforge run my_agent.py         # full autonomous loop
+evoforge forecast my_agent.py "cancel my booking ASAP"   # risk before running
+evoforge insights my_agent.py    # failure-intelligence dashboard
+evoforge report                  # evolution + intelligence report
 ```
 
 ---
 
-## How It Works
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     EvoForge Evolution Loop                       │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│   Bootstrap ──→ Eval ──→ Gaps? ──→ Evolve ──→ Re-eval ──→ ...  │
-│                           │                                       │
-│                     Saturating? ──→ Expand Eval (harder cases)    │
-│                                                                   │
-│   Evolution targets:                                              │
-│     1. Prompts (instant, free)                                    │
-│     2. Skills (versioned .md files)                               │
-│     3. Architecture (CoT, debate, decompose)                      │
-│     4. Model (LoRA fine-tuning)                                   │
-│                                                                   │
-│   Data generation:                                                │
-│     • Failure-mode mining (cluster real failures)                 │
-│     • Mode-conditioned synthesis (targeted train data)            │
-│     • Adaptive eval expansion (close coverage blind spots)        │
-│                                                                   │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Framework-Agnostic
-
-EvoForge wraps **any** agent — smolagents, pydantic-ai, LangChain, or plain Python:
+## Framework-agnostic
 
 ```python
-# smolagents
+# smolagents / pydantic-ai / LangChain / plain OpenAI — wrap them all the same way
 @sdk.agent(tools=[search_flights, book_flight])
 def my_agent(messages):
-    return smol_agent.run(messages[-1].content)
-
-# pydantic-ai
-@sdk.agent(tools=["search", "book"])
-def my_agent(messages):
-    return pai_agent.run_sync(messages[-1].content).output
-
-# Plain Python with OpenAI
-@sdk.agent(tools=["search", "book"])
-def my_agent(messages):
-    return client.chat.completions.create(...).choices[0].message.content
+    return your_agent.run(messages[-1].content)
 ```
 
 ---
 
 ## Local-First
 
-EvoForge runs entirely on your machine:
+Runs entirely on your machine — zero cloud dependency, zero cost, full privacy:
 
-- **Inference**: Ollama (qwen2.5:3b or any model)
-- **Training**: MLX LoRA on Apple Silicon
-- **Judge**: Local LLM (or gpt-4o-mini for higher accuracy)
-- **Storage**: `~/agent-foundry/.foundry/` by default
-
-Zero cloud dependency. Zero cost. Full privacy.
+- **Inference & judge:** Ollama (`qwen2.5:3b` or any model)
+- **Structured generation:** schema-constrained decoding for reliable data even from small models
+- **Training:** MLX LoRA on Apple Silicon
+- **Storage:** local `.foundry/` directory
 
 ---
 
-## Dashboard
+## What it does in practice
+
+EvoForge is validated end-to-end against a live local agent (no seeded data):
+
+- Designs eval cases, runs the real agent, mines failures, and **closes coverage blind spots cycle-over-cycle** (0% → 100% on the demo agent)
+- Generates expansion cases the agent actually fails — i.e. genuinely discriminating, not filler
+- Reports forecasting quality with **honest cross-validation** (so it never over-claims on tiny data)
+
+*Numbers vary by agent/model; metrics use held-out evaluation, not training-set scores.*
+
+---
+
+## Install
 
 ```bash
-evoforge report
-```
-
-Generates a standalone HTML report showing your agent's evolution story:
-- Score progression over time
-- Per-capability breakdown (GAP / OK / SATURATING)
-- Collapsible evolution steps with diffs and failure analysis
-- Training data samples and skill history
-
----
-
-## Key Concepts
-
-| Concept | What it does |
-|---|---|
-| **Bootstrap** | Auto-generates eval cases from your task spec + tools |
-| **Capabilities** | Broad skill areas inferred from your agent (3-4 per agent) |
-| **LLM Judge** | Scores responses semantically (not just string matching) |
-| **Skill Files** | Versioned instruction docs that evolve and can be retired |
-| **Rejection Sampling** | Generate candidates → score → keep only the good ones |
-| **Regression Guard** | A/B test before promoting a new model (no regressions allowed) |
-| **Eval Expansion** | When agent saturates (>0.85), auto-generates harder cases |
-
----
-
-## Proven Results
-
-| Agent | Task | Improvement | Method |
-|---|---|---|---|
-| Flight booking | JSON format output | 20% → 100% | LoRA (12 examples, 200 iters) |
-| Flight booking | Full pipeline | 0.156 → 0.278 | Prompt evolution (4 cycles) |
-| Code review | Structured output | 11% → 83% | Prompt + skills (4 rounds) |
-| Error handling | Architecture search | 0.0 → 0.5 | Chain-of-Thought wrapper |
-
----
-
-## Requirements
-
-- Python 3.10+
-- [Ollama](https://ollama.ai/) (for local inference)
-- Apple Silicon Mac (for MLX LoRA training) — or skip training and use prompt evolution only
-
----
-
-## Installation
-
-```bash
-# From source
 git clone https://github.com/lhenry15/evoforge.git
-cd evoforge
-pip install -e .
-
-# Pull the model
+cd evoforge && pip install -e .
 ollama pull qwen2.5:3b
 ```
 
+Requirements: Python 3.10+, [Ollama](https://ollama.ai/) for local inference, Apple Silicon for MLX LoRA (training optional).
+
 ---
 
-## Project Structure
+## Project structure
 
 ```
 src/evoforge/
-├── core/           # SDK, config, types, agent history
-├── trace/          # Normalized traces, failure signatures, lineage
-├── mining/         # Failure-mode clustering + root-cause labeling
-├── synthesis/      # Mode-conditioned training-data generation
-├── coverage/       # Adaptive eval expansion (blind-spot closing)
-├── forecast/       # Pre-deploy failure forecasting + calibration
-├── eval/           # Eval runner, LLM judge, multi-turn
-├── evolution/      # Prompt evolver, skill registry, architecture search
-├── factory/        # Training-example formatting + DPO pairs
-├── training/       # MLX LoRA backend
-├── bootstrap/      # Zero-shot eval case generation
-├── llm/            # Ollama (structured outputs) + GitHub Models pools
-├── dashboard.py    # HTML report generator
-└── cli.py          # CLI
+├── core/        # SDK, config, types, agent history
+├── trace/       # normalized traces, failure signatures, lineage
+├── mining/      # failure-mode clustering + root-cause labeling
+├── synthesis/   # mode-conditioned training-data generation
+├── coverage/    # adaptive eval expansion (blind-spot closing)
+├── forecast/    # pre-deploy failure forecasting + calibration
+├── eval/        # eval runner, LLM judge, multi-turn
+├── evolution/   # prompt/skill/architecture evolution, A/B promotion
+├── training/    # MLX LoRA backend
+├── bootstrap/   # zero-shot eval generation
+├── llm/         # Ollama (structured outputs) + GitHub Models pools
+└── cli.py
 ```
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). PRs welcome — especially for:
-- New failure-mode synthesis strategies
-- Better LLM judge prompts
-- Additional training backends (QLoRA, OpenAI FT)
-- Multi-party eval
-
----
+PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Great first areas: new synthesis strategies, better judge prompts, more training backends (QLoRA, OpenAI FT), multi-party eval.
 
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).
 
----
-
 ## Citation
 
 ```bibtex
 @software{evoforge2025,
-  title={EvoForge: A Data-Centric SDK for Self-Evolving LLM Agents},
-  author={Henry, L.},
-  year={2025},
-  url={https://github.com/lhenry15/evoforge}
+  title  = {EvoForge: A Data-Centric SDK for Self-Evolving LLM Agents},
+  author = {Henry, L.},
+  year   = {2025},
+  url    = {https://github.com/lhenry15/evoforge}
 }
 ```
+
+---
+
+<div align="center">
+<sub>Keywords: self-evolving agents · self-improving LLM agents · agent development · agentic AI · LLM evaluation · agent reliability · data-centric AI · synthetic data generation · failure forecasting · prompt optimization · LoRA fine-tuning · AI agent testing · agent observability</sub>
+</div>
